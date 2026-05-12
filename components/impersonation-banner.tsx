@@ -15,8 +15,8 @@ const ROLE_LABEL: Record<RoleView, string> = {
 // Quel user mocké est cohérent avec chaque rôle
 const ROLE_USER: Record<RoleView, string> = {
   admin: "u10",
-  "manager-formation": "u12",
-  "manager-deployment": "u11",
+  "manager-formation": "u1",
+  "manager-deployment": "u4",
   ops: "u3",
   logistique: "u13",
 };
