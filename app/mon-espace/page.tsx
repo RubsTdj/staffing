@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/page-header";
-import { useStore, computeActivityState } from "@/lib/store";
+import { useStore, computeActivityState, getAssigneeIds } from "@/lib/store";
 import { TODAY } from "@/lib/mock-data";
 import {
   Building2,
@@ -27,7 +27,7 @@ export default function Page() {
 
   const today = new Date(TODAY);
   const myActivities = activities
-    .filter((a) => a.assignees.includes(currentUserId))
+    .filter((a) => getAssigneeIds(a).includes(currentUserId))
     .filter((a) => {
       const diff = (+new Date(a.dateStart) - +today) / 86400000;
       return diff >= -7 && diff <= 60;
@@ -37,7 +37,7 @@ export default function Page() {
   const yearStart = new Date(today.getFullYear(), 0, 1);
   const yearActivities = activities.filter(
     (a) =>
-      a.assignees.includes(currentUserId) &&
+      getAssigneeIds(a).includes(currentUserId) &&
       a.type !== "Off" &&
       new Date(a.dateStart) >= yearStart,
   );
@@ -139,7 +139,7 @@ export default function Page() {
               const centre = centres.find((c) => c.id === a.centreId);
               const state = computeActivityState(a);
               const isOff = a.type === "Off";
-              const teammates = a.assignees
+              const teammates = getAssigneeIds(a)
                 .filter((id) => id !== currentUserId)
                 .map((id) => users.find((u) => u.id === id))
                 .filter(Boolean) as typeof users;

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
 import { RightDrawer } from "@/components/right-drawer";
+import { ImpersonationBanner } from "@/components/impersonation-banner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +33,12 @@ export default function RootLayout({
       <body className="h-full">
         <div className="flex h-dvh w-full overflow-hidden">
           <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-[var(--color-paper)]">
-            {children}
-          </main>
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <ImpersonationBanner />
+            <main className="flex-1 overflow-y-auto bg-[var(--color-paper)]">
+              {children}
+            </main>
+          </div>
         </div>
         <RightDrawer />
       </body>

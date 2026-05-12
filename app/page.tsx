@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
-import { useStore, computeActivityState } from "@/lib/store";
+import { useStore, computeActivityState, getAssigneeIds } from "@/lib/store";
 import { TODAY } from "@/lib/mock-data";
 import {
   ArrowRight,
@@ -44,7 +44,7 @@ export default function Page() {
   const isAdmin = roleView === "admin";
 
   const myActivities = activities
-    .filter((a) => a.assignees.includes(currentUserId))
+    .filter((a) => getAssigneeIds(a).includes(currentUserId))
     .filter((a) => withinNextDays(a.dateStart, 14))
     .sort((a, b) => +new Date(a.dateStart) - +new Date(b.dateStart));
 
@@ -246,7 +246,7 @@ export default function Page() {
               />
               <KPI
                 label="Trains à booker"
-                value={toBook.reduce((s, a) => s + a.assignees.length, 0)}
+                value={toBook.reduce((s, a) => s + a.assignments.length, 0)}
                 hint="participants"
               />
               <KPI label="Hébergements" value={toBook.length} hint="à réserver" />
@@ -259,7 +259,7 @@ export default function Page() {
               {toBook.map((a) => {
                 const client = clients.find((c) => c.id === a.clientId);
                 const centre = centres.find((c) => c.id === a.centreId);
-                const assigned = a.assignees
+                const assigned = getAssigneeIds(a)
                   .map((id) => users.find((u) => u.id === id))
                   .filter(Boolean) as typeof users;
                 return (
@@ -369,8 +369,8 @@ export default function Page() {
                             {client?.name} · {centre?.name}
                           </div>
                           <div className="text-[11.5px] text-[var(--color-ink-3)]">
-                            {a.assignees.length} assigné
-                            {a.assignees.length > 1 ? "s" : ""} · {a.type}{" "}
+                            {a.assignments.length} assigné
+                            {a.assignments.length > 1 ? "s" : ""} · {a.type}{" "}
                             {a.subCategory ?? ""}
                           </div>
                         </div>
