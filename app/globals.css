@@ -1,15 +1,19 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Canvas */
-  --color-paper: #f7f6f2;
+  /* Canvas — deeper paper to give cards real lift */
+  --color-paper: #efece4;
   --color-surface: #ffffff;
+  --color-surface-2: #fbfaf5;
   --color-ink: #14110f;
   --color-ink-2: #3a3633;
   --color-ink-3: #6b6660;
   --color-muted: #8a857f;
-  --color-line: #e8e4dd;
-  --color-line-2: #efece5;
+  --color-line: #e3ddd2;
+  --color-line-2: #ece8de;
+  --shadow-card: 0 1px 0 rgba(20, 17, 15, 0.04), 0 1px 2px rgba(20, 17, 15, 0.04);
+  --shadow-card-hover: 0 1px 0 rgba(20, 17, 15, 0.04),
+    0 8px 24px -12px rgba(20, 17, 15, 0.18);
 
   /* Sidebar (anthracite, NOT navy) */
   --color-rail: #0e0e10;

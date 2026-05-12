@@ -4,97 +4,73 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
+  BarChart3,
+  Building2,
   Check,
   ChevronDown,
-  ChevronRight,
-  Command,
+  Compass,
+  GraduationCap,
+  Home,
+  Inbox,
+  Layers,
   Search,
+  TrainFront,
+  UserCircle,
+  Users,
+  Users2,
 } from "lucide-react";
 import { canAccess, useStore } from "@/lib/store";
 import type { RoleView } from "@/lib/types";
 
-type Item = { label: string; href: string; nodeId: string; badge?: number };
-type Section = {
+interface NavItem {
   id: string;
   label: string;
-  href?: string;
-  nodeId?: string;
-  items?: Item[];
-};
+  href: string;
+  Icon: typeof Home;
+}
 
-const NAV: Section[] = [
-  { id: "today", label: "Aujourd'hui", href: "/", nodeId: "today" },
+const NAV: NavItem[] = [
+  { id: "today", label: "Aujourd'hui", href: "/", Icon: Home },
   {
     id: "previsionnel",
     label: "Prévisionnel",
-    nodeId: "previsionnel",
-    items: [
-      {
-        label: "Pipeline",
-        href: "/previsionnel/pipeline",
-        nodeId: "previsionnel",
-      },
-      {
-        label: "Timeline déploiement",
-        href: "/previsionnel/timeline",
-        nodeId: "previsionnel",
-      },
-    ],
+    href: "/previsionnel/pipeline",
+    Icon: Compass,
   },
-  {
-    id: "clients",
-    label: "Clients & Centres",
-    nodeId: "clients",
-    items: [
-      { label: "Clients", href: "/clients", nodeId: "clients" },
-      { label: "Centres", href: "/clients/centres", nodeId: "centres" },
-    ],
-  },
+  { id: "clients", label: "Clients", href: "/clients", Icon: Building2 },
   {
     id: "formations",
     label: "Formations",
-    nodeId: "formations",
-    items: [
-      { label: "Liste", href: "/formation/liste", nodeId: "formations" },
-      {
-        label: "Timeline formateurs",
-        href: "/formation/timeline-formateurs",
-        nodeId: "formateurs",
-      },
-    ],
+    href: "/formation/liste",
+    Icon: GraduationCap,
   },
   {
     id: "accompagnements",
     label: "Accompagnements",
-    nodeId: "accompagnements",
-    items: [
-      { label: "Liste", href: "/accompagnement/liste", nodeId: "accompagnements" },
-      { label: "Pools", href: "/accompagnement/pools", nodeId: "pools" },
-    ],
-  },
-  { id: "logistique", label: "Logistique", href: "/logistique/liste", nodeId: "logistique" },
-  {
-    id: "equipe",
-    label: "Équipe",
-    nodeId: "equipe",
-    items: [
-      { label: "Collaborateurs", href: "/equipe/collaborateurs", nodeId: "equipe" },
-      { label: "Équité", href: "/equipe/equite", nodeId: "equipe" },
-    ],
+    href: "/accompagnement/liste",
+    Icon: Users2,
   },
   {
-    id: "inbox",
-    label: "Inbox",
-    nodeId: "inbox",
-    items: [
-      { label: "Observations", href: "/demandes/observation", nodeId: "inbox" },
-      { label: "Annulations", href: "/demandes/annulations", nodeId: "inbox" },
-      { label: "Idées · Bugs", href: "/demandes/feedback", nodeId: "inbox" },
-    ],
+    id: "pools",
+    label: "Pools",
+    href: "/accompagnement/pools",
+    Icon: Layers,
   },
-  { id: "rapports", label: "Rapports", href: "/rapports", nodeId: "rapports" },
-  { id: "mon-espace", label: "Mon espace", href: "/mon-espace", nodeId: "mon-espace" },
-  { id: "stories", label: "User Stories", href: "/product/stories", nodeId: "stories" },
+  {
+    id: "logistique",
+    label: "Logistique",
+    href: "/logistique/liste",
+    Icon: TrainFront,
+  },
+  { id: "equipe", label: "Équipe", href: "/equipe/collaborateurs", Icon: Users },
+  { id: "rapports", label: "Rapports", href: "/rapports", Icon: BarChart3 },
+  { id: "inbox", label: "Inbox", href: "/demandes/observation", Icon: Inbox },
+  {
+    id: "mon-espace",
+    label: "Mon espace",
+    href: "/mon-espace",
+    Icon: UserCircle,
+  },
 ];
 
 const ROLE_LABEL: Record<RoleView, string> = {
@@ -106,38 +82,26 @@ const ROLE_LABEL: Record<RoleView, string> = {
 };
 
 export function Sidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const currentUser = useStore((s) =>
     s.users.find((u) => u.id === s.currentUserId),
   );
   const roleView = useStore((s) => s.roleView);
   const setRoleView = useStore((s) => s.setRoleView);
   const observerRequests = useStore((s) => s.observerRequests);
+  const activities = useStore((s) => s.activities);
   const newObsCount = observerRequests.filter(
     (r) => r.status === "submitted",
   ).length;
+  const cancelCount = activities.filter((a) => a.cancelRequested).length;
+  const inboxBadge = newObsCount + cancelCount;
 
-  const accessibleNav = NAV.filter((s) =>
-    s.nodeId ? canAccess(roleView, s.nodeId) : true,
-  );
-
-  const initialOpen = new Set(
-    accessibleNav
-      .filter((s) => s.items?.some((i) => pathname?.startsWith(i.href)))
-      .map((s) => s.id),
-  );
-  const [open, setOpen] = useState<Set<string>>(initialOpen);
+  const accessibleNav = NAV.filter((s) => canAccess(roleView, s.id));
   const [roleOpen, setRoleOpen] = useState(false);
 
-  const toggle = (id: string) =>
-    setOpen((s) => {
-      const next = new Set(s);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-
   return (
-    <aside className="hidden md:flex h-dvh w-[248px] shrink-0 flex-col bg-[var(--color-rail)] text-[var(--color-rail-text)]">
+    <aside className="hidden md:flex h-dvh w-[224px] shrink-0 flex-col bg-[var(--color-rail)] text-[var(--color-rail-text)]">
+      {/* Brand */}
       <div className="px-4 pt-4 pb-3">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-accent)] text-[13px] font-semibold text-white">
@@ -150,6 +114,7 @@ export function Sidebar() {
         </Link>
       </div>
 
+      {/* Search */}
       <div className="px-3 pb-3">
         <button
           type="button"
@@ -157,108 +122,61 @@ export function Sidebar() {
         >
           <Search size={13} strokeWidth={1.8} />
           <span className="flex-1 truncate">Rechercher…</span>
-          <span className="flex items-center gap-0.5 text-[10px] text-[var(--color-rail-text)]/70">
-            <Command size={10} strokeWidth={2} />K
-          </span>
+          <span className="text-[10px] text-[var(--color-rail-text)]/60">⌘K</span>
         </button>
       </div>
 
+      {/* Nav — flat */}
       <nav className="flex-1 overflow-y-auto px-2 pb-4">
         <ul className="flex flex-col gap-0.5">
-          {accessibleNav.map((section) => {
-            const hasChildren = !!section.items?.length;
-            const accessibleItems = section.items?.filter((i) =>
-              canAccess(roleView, i.nodeId),
-            );
-            const isOpen = open.has(section.id);
-            const isActiveSection = accessibleItems?.some((i) =>
-              pathname?.startsWith(i.href),
-            );
-
-            if (!hasChildren && section.href) {
-              const active = pathname === section.href;
-              const badge =
-                section.id === "inbox" ? newObsCount : undefined;
-              return (
-                <li key={section.id}>
-                  <Link
-                    href={section.href}
-                    className={`flex items-center justify-between rounded-md px-2 py-1.5 text-[12.5px] font-medium transition-colors ${
-                      active
-                        ? "bg-[var(--color-rail-active)] text-[var(--color-rail-text-hi)]"
-                        : "text-[var(--color-rail-text)] hover:text-[var(--color-rail-text-hi)]"
-                    }`}
-                  >
-                    <span>{section.label}</span>
-                    {badge ? (
-                      <span className="rounded-sm bg-[var(--color-accent)] px-1 py-px text-[9.5px] font-semibold text-white">
-                        {badge}
-                      </span>
-                    ) : active ? (
-                      <span className="h-1 w-1 rounded-full bg-[var(--color-accent)]" />
-                    ) : null}
-                  </Link>
-                </li>
-              );
-            }
-
-            if (!accessibleItems || accessibleItems.length === 0) return null;
-
+          {accessibleNav.map((item) => {
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href.split("?")[0]);
+            const badge =
+              item.id === "inbox" && inboxBadge > 0 ? inboxBadge : undefined;
             return (
-              <li key={section.id} className="mt-0.5">
-                <button
-                  type="button"
-                  onClick={() => toggle(section.id)}
-                  className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[12.5px] font-medium transition-colors ${
-                    isActiveSection
-                      ? "text-[var(--color-rail-text-hi)]"
-                      : "text-[var(--color-rail-text)] hover:text-[var(--color-rail-text-hi)]"
+              <li key={item.id}>
+                <Link
+                  href={item.href}
+                  className={`group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
+                    active
+                      ? "bg-[var(--color-accent)]/15 text-[var(--color-rail-text-hi)]"
+                      : "text-[var(--color-rail-text)] hover:bg-white/5 hover:text-[var(--color-rail-text-hi)]"
                   }`}
                 >
-                  <span>{section.label}</span>
-                  <ChevronRight
-                    size={11}
-                    strokeWidth={2}
-                    className={`transition-transform ${
-                      isOpen ? "rotate-90" : ""
-                    }`}
+                  {active && (
+                    <span className="absolute left-0 top-1/2 h-4 w-[2px] -translate-x-1 -translate-y-1/2 rounded-r bg-[var(--color-accent)]" />
+                  )}
+                  <item.Icon
+                    size={14}
+                    strokeWidth={1.7}
+                    className={
+                      active
+                        ? "text-[var(--color-accent)]"
+                        : "text-[var(--color-rail-text)]/70"
+                    }
                   />
-                </button>
-                {isOpen && (
-                  <ul className="ml-3 mt-0.5 flex flex-col border-l border-[var(--color-rail-line)] pl-2">
-                    {accessibleItems.map((item) => {
-                      const active = pathname === item.href;
-                      return (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            className={`group relative flex items-center justify-between rounded-md px-2 py-1.5 text-[12px] transition-colors ${
-                              active
-                                ? "bg-[var(--color-rail-active)] text-[var(--color-rail-text-hi)]"
-                                : "text-[var(--color-rail-text)] hover:text-[var(--color-rail-text-hi)]"
-                            }`}
-                          >
-                            {active && (
-                              <span className="absolute -left-[10px] top-1/2 h-3 w-px -translate-y-1/2 bg-[var(--color-accent)]" />
-                            )}
-                            <span className="truncate">{item.label}</span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
+                  <span className="flex-1">{item.label}</span>
+                  {badge && (
+                    <span className="rounded-sm bg-[var(--color-accent)] px-1 py-px text-[9.5px] font-semibold text-white tabular-nums">
+                      {badge}
+                    </span>
+                  )}
+                </Link>
               </li>
             );
           })}
         </ul>
       </nav>
 
+      {/* Footer — user + role */}
       <div className="border-t border-[var(--color-rail-line)] px-3 py-2.5">
         <button
           type="button"
           onClick={() => setRoleOpen(!roleOpen)}
-          className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left hover:bg-[var(--color-rail-active)]"
+          className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left hover:bg-white/5"
         >
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#e8d9c8] to-[#c8a587] text-[11px] font-semibold text-[var(--color-ink)]">
             {currentUser?.initials ?? "?"}
