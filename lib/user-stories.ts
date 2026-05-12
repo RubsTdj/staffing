@@ -1,30 +1,26 @@
 export type StoryPriority = "P0" | "P1" | "P2";
-export type StoryStatus =
-  | "done"
-  | "in-progress"
-  | "next"
-  | "later";
+export type StoryStatus = "done" | "in-progress" | "next" | "later";
 
 export interface UserStory {
   id: string;
   persona: string;
-  as: string; // "En tant que ..."
-  want: string; // "je veux ..."
-  so: string; // "afin de ..."
+  as: string;
+  want: string;
+  so: string;
   priority: StoryPriority;
   status: StoryStatus;
-  source: string; // CR / interview
+  source: string;
   notes?: string;
 }
 
+// Personas anonymisés (rôles uniquement, pas de noms de collaborateurs)
 export const STORIES: UserStory[] = [
-  // —— Manager Formation (Siméon) ——
+  // —— Manager Formation ——
   {
     id: "S-01",
     persona: "Manager Formation",
     as: "Manager Formation",
-    want:
-      "voir le prévisionnel des signatures à M-6/M-5 alimenté par Julie",
+    want: "voir le prévisionnel des signatures à M-6/M-5",
     so: "piloter le staffing trimestriel sans changer d'outil",
     priority: "P0",
     status: "in-progress",
@@ -34,8 +30,7 @@ export const STORIES: UserStory[] = [
     id: "S-02",
     persona: "Manager Formation",
     as: "Manager Formation",
-    want:
-      "estimer les besoins formation et accompagnement par client à M-5",
+    want: "estimer les besoins formation et accompagnement par client à M-5",
     so: "déclencher l'alerte ressources externes si l'équipe est insuffisante",
     priority: "P0",
     status: "next",
@@ -53,11 +48,11 @@ export const STORIES: UserStory[] = [
     source: "Process · Phase 1 (diamond)",
   },
 
-  // —— Julie (Sales prévisionnel) ——
+  // —— Responsable Prévisionnel ——
   {
     id: "S-04",
-    persona: "Julie",
-    as: "Julie",
+    persona: "Responsable Prévisionnel",
+    as: "Responsable Prévisionnel",
     want:
       "importer / saisir le prévisionnel des signatures avec niveau de confiance",
     so: "que les Managers voient l'impact des clients potentiels (jaune/orange)",
@@ -66,11 +61,11 @@ export const STORIES: UserStory[] = [
     source: "CR planification",
   },
 
-  // —— Manager Déploiement (Clara) ——
+  // —— Manager Déploiement ——
   {
     id: "S-05",
     persona: "Manager Déploiement",
-    as: "Manager Déploiement (Clara)",
+    as: "Manager Déploiement",
     want: "lancer le rituel trimestriel de constitution du pool",
     so: "donner aux TLs un point de départ clair",
     priority: "P0",
@@ -80,10 +75,10 @@ export const STORIES: UserStory[] = [
   {
     id: "S-06",
     persona: "Manager Déploiement",
-    as: "Manager Déploiement (Clara)",
+    as: "Manager Déploiement",
     want:
       "qualifier chaque entrée du pool en Dispo / Backup / Indispo, avec note",
-    so: "que May et les managers travaillent sur des candidats fiables",
+    so: "que la logistique et les managers travaillent sur des candidats fiables",
     priority: "P0",
     status: "done",
     source: "Process · Phase 2",
@@ -91,7 +86,7 @@ export const STORIES: UserStory[] = [
   {
     id: "S-07",
     persona: "Manager Déploiement",
-    as: "Manager Déploiement (Clara)",
+    as: "Manager Déploiement",
     want: "centraliser les demandes d'observation soumises par les managers",
     so: "affecter les observateurs aux déplacements et appliquer la règle 1/déplacement",
     priority: "P0",
@@ -117,7 +112,7 @@ export const STORIES: UserStory[] = [
     as: "TL / Manager OPS",
     want:
       "renseigner pour chaque trimestre la dispo des collaborateurs de mon équipe",
-    so: "que Clara puisse les qualifier sans devoir les demander un par un",
+    so: "que le Manager Déploiement puisse les qualifier sans demander un par un",
     priority: "P0",
     status: "done",
     source: "Process · Phase 2",
@@ -177,11 +172,11 @@ export const STORIES: UserStory[] = [
     source: "CR objectifs · KPIs",
   },
 
-  // —— Logistique (May) ——
+  // —— Logistique ——
   {
     id: "S-15",
     persona: "Logistique",
-    as: "May",
+    as: "Logistique",
     want:
       "voir uniquement les missions au statut Staffing Validé sous forme de cartes",
     so: "ne plus dépendre d'un fichier Excel transmis manuellement",
@@ -192,7 +187,7 @@ export const STORIES: UserStory[] = [
   {
     id: "S-16",
     persona: "Logistique",
-    as: "May",
+    as: "Logistique",
     want:
       "voir un train aller suggéré (veille, jamais dimanche) et le nb de nuits",
     so: "réserver plus vite avec moins d'erreurs",
@@ -203,7 +198,7 @@ export const STORIES: UserStory[] = [
   {
     id: "S-17",
     persona: "Logistique",
-    as: "May",
+    as: "Logistique",
     want:
       "marquer une mission comme Prêt au départ une fois trains et hôtels réservés",
     so: "que les OPS voient leur agenda à jour",
@@ -214,7 +209,7 @@ export const STORIES: UserStory[] = [
   {
     id: "S-18",
     persona: "Logistique",
-    as: "May",
+    as: "Logistique",
     want:
       "pousser automatiquement les événements Google Calendar des participants",
     so: "supprimer l'étape manuelle d'invitation",
@@ -223,11 +218,11 @@ export const STORIES: UserStory[] = [
     source: "Process · Phase 3",
   },
 
-  // —— Admin / Rubens / Siméon ——
+  // —— Admin ——
   {
     id: "S-19",
     persona: "Admin",
-    as: "Admin / Rubens",
+    as: "Admin",
     want: "importer la reprise de données 2026 depuis un CSV",
     so: "démarrer la phase de test sept-déc 2026 avec un jeu propre",
     priority: "P0",
@@ -248,7 +243,7 @@ export const STORIES: UserStory[] = [
   {
     id: "S-21",
     persona: "Admin",
-    as: "Siméon",
+    as: "Manager Formation / Admin",
     want:
       "exporter le rapport trimestriel 'prime de déplacement' en CSV (jours terrain, trips mutualisés, IDF exclu, veille 0.5j)",
     so: "alimenter la paie sans retraitement manuel",
@@ -259,7 +254,7 @@ export const STORIES: UserStory[] = [
   {
     id: "S-22",
     persona: "Admin",
-    as: "Siméon",
+    as: "Manager Formation",
     want:
       "voir un dashboard d'équité : déplacements/personne, balance Manager vs Formateur",
     so: "préserver l'équilibre de l'équipe",
@@ -283,10 +278,10 @@ export const STORIES: UserStory[] = [
     id: "S-24",
     persona: "Transversal",
     as: "tout utilisateur créant une Formation",
-    want: "voir uniquement les centres marqués 'formateur' (2 sur 30 pour PST35)",
+    want: "voir uniquement les centres marqués 'formateur'",
     so: "éviter les sélections incorrectes",
     priority: "P0",
-    status: "in-progress",
+    status: "done",
     source: "CR · bug fix",
   },
   {
@@ -303,7 +298,7 @@ export const STORIES: UserStory[] = [
   {
     id: "S-26",
     persona: "Transversal",
-    as: "Manager / Clara",
+    as: "Manager",
     want:
       "commenter une activité avec mentions @ pour échanger entre managers / formateurs",
     so: "garder les échanges au bon endroit",
@@ -343,6 +338,37 @@ export const STORIES: UserStory[] = [
     status: "next",
     source: "CR · UI",
   },
+  {
+    id: "S-30",
+    persona: "Transversal",
+    as: "Manager Déploiement",
+    want: "assigner une durée différente par personne sur le même accompagnement",
+    so: "refléter la réalité du terrain (1, 2 ou 3 jours selon le profil)",
+    priority: "P0",
+    status: "done",
+    source: "Reset fondamentaux",
+  },
+  {
+    id: "S-31",
+    persona: "Transversal",
+    as: "Admin",
+    want: "tester l'application en impersonant chaque rôle",
+    so: "valider les permissions et l'expérience par persona",
+    priority: "P0",
+    status: "done",
+    source: "Reset fondamentaux",
+  },
+  {
+    id: "S-32",
+    persona: "Transversal",
+    as: "Responsable Prévisionnel",
+    want:
+      "décaler un bloc client complet d'une semaine en drag/clic sur la timeline",
+    so: "réagir vite à un report de signature ou un jour férié",
+    priority: "P1",
+    status: "in-progress",
+    source: "Reset fondamentaux",
+  },
 ];
 
 export const PERSONAS = [
@@ -351,7 +377,7 @@ export const PERSONAS = [
   "Manager OPS / TL",
   "Collaborateur OPS",
   "Logistique",
-  "Julie",
+  "Responsable Prévisionnel",
   "Admin",
   "Transversal",
 ] as const;

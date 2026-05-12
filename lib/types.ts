@@ -134,7 +134,7 @@ export interface PoolEntry {
   filledById: string; // TL/Manager OPS qui a renseigné
   selfDeclared: boolean;
   rawAvailability: Availability;
-  qualification: Qualification; // posée par Clara
+  qualification: Qualification; // posée par le Manager Déploiement
   qualifiedById?: string;
   qualifiedAt?: string;
   note?: string;
