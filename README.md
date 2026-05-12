@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Popsgo — Operating workspace
 
-## Getting Started
+Prototype frontend d'un OS de staffing médical. Pas de backend : tout
+le state est mocké côté client avec Zustand.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router) — **static export**
+- Tailwind v4
+- Zustand (mock store)
+- lucide-react
+- Geist + Instrument Serif (Google Fonts)
+
+## Dev local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Déploiement GitHub Pages
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+L'app est servie statiquement à `https://<owner>.github.io/staffing/`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Le workflow `.github/workflows/deploy-pages.yml` build et déploie sur
+chaque push vers `main`.
 
-## Learn More
+### Activer Pages (une seule fois)
 
-To learn more about Next.js, take a look at the following resources:
+1. **Settings → Pages → Build and deployment → Source : `GitHub Actions`**
+2. Push sur `main` ou lancer le workflow manuellement (onglet *Actions* → *Deploy to GitHub Pages* → *Run workflow*).
+3. L'URL apparaît dans le résumé du job *deploy*.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Le `basePath` est injecté via la variable d'env `NEXT_PUBLIC_BASE_PATH`
+(positionnée à `/staffing` dans le workflow). En local, elle est vide
+donc l'app vit à la racine.
