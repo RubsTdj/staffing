@@ -1,6 +1,21 @@
 export type Role = "Admin" | "Manager" | "OPS" | "Logistique";
-export type Team = "Déploiement" | "Formation";
+export type Team =
+  | "Formation"
+  | "Déploiement"
+  | "RM"
+  | "EFEX"
+  | "Produits"
+  | "Intégration";
 export type Level = "Observateur" | "Junior" | "Senior";
+
+export const ALL_TEAMS: Team[] = [
+  "Formation",
+  "Déploiement",
+  "RM",
+  "EFEX",
+  "Produits",
+  "Intégration",
+];
 
 export type Availability = "available" | "backup" | "unavailable";
 export type Qualification = "available" | "backup" | null;

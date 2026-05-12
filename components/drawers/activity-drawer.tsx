@@ -87,12 +87,17 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
         qual,
       }))
       .filter((x) => x.user && !assigneeIds.includes(x.user!.id))
+      .filter((x) => {
+        // Formation : uniquement formateurs (équipe Formation)
+        if (activity.type === "Formation") return x.user!.team === "Formation";
+        return true;
+      })
       .filter((x) =>
         query.trim()
           ? x.user!.name.toLowerCase().includes(query.toLowerCase())
           : true,
       ) as { user: User; qual: "available" | "backup" }[];
-  }, [pool, users, assigneeIds, activity.clientId, activeQuarter, query]);
+  }, [pool, users, assigneeIds, activity.clientId, activeQuarter, query, activity.type]);
 
   const observerCandidates = useMemo(() => {
     return observerRequests
@@ -109,13 +114,20 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
 
   const candidates = useMemo(() => {
     return users
-      .filter((u) => u.role === "OPS" && !assigneeIds.includes(u.id))
+      .filter((u) => {
+        if (assigneeIds.includes(u.id)) return false;
+        if (u.role === "Logistique" || u.role === "Admin") return false;
+        // Formation → uniquement équipe Formation (formateurs)
+        if (activity.type === "Formation") return u.team === "Formation";
+        // Accompagnement → toutes équipes (Formation + Déploiement + RM + EFEX + Produits + Intégration)
+        return true;
+      })
       .filter((u) =>
         query.trim()
           ? u.name.toLowerCase().includes(query.toLowerCase())
           : true,
       );
-  }, [users, assigneeIds, query]);
+  }, [users, assigneeIds, query, activity.type]);
 
   const handleAssign = (userId: string) => {
     const u = users.find((x) => x.id === userId);
