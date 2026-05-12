@@ -22,7 +22,7 @@ export default function Page() {
           return (
             client?.name.toLowerCase().includes(q) ||
             centre?.name.toLowerCase().includes(q) ||
-            a.subCategory.toLowerCase().includes(q)
+            a.subCategory?.toLowerCase().includes(q)
           );
         })
       : accomp;

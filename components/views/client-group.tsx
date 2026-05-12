@@ -4,7 +4,8 @@ import { useState } from "react";
 import { ChevronRight, MapPin, Users2 } from "lucide-react";
 import type { Activity, Centre, Client } from "@/lib/types";
 import { MissionRow } from "./mission-row";
-import { StaffingDot } from "@/components/ui/staffing-status";
+import { StateDot } from "@/components/ui/state-badge";
+import { computeActivityState } from "@/lib/store";
 
 interface CentreGroup {
   centre: Centre;
@@ -20,15 +21,15 @@ export function ClientGroup({
 }) {
   const [open, setOpen] = useState(true);
   const all = groups.flatMap((g) => g.activities);
+  const states = all.map(computeActivityState);
   const counts = {
-    done: all.filter((a) => a.status === "done").length,
-    partial: all.filter((a) => a.status === "partial").length,
-    todo: all.filter((a) => a.status === "todo").length,
-    alert: all.filter((a) => a.status === "alert").length,
+    done:
+      states.filter((s) => s === "validated" || s === "ready" || s === "staffed").length,
+    partial: states.filter((s) => s === "to-staff").length,
+    todo: states.filter((s) => s === "draft").length,
+    alert: states.filter((s) => s === "cancel-requested").length,
   };
-  const progress = Math.round(
-    (counts.done / Math.max(1, all.length)) * 100,
-  );
+  const progress = Math.round((counts.done / Math.max(1, all.length)) * 100);
 
   return (
     <section className="overflow-hidden rounded-xl border border-[var(--color-line)] bg-white">
@@ -50,7 +51,7 @@ export function ClientGroup({
             {client.name}
           </h2>
           <span className="text-[11.5px] font-medium uppercase tracking-[0.08em] text-[var(--color-ink-3)]">
-            {client.type}
+            {client.kind}
           </span>
           <span className="hidden text-[11.5px] text-[var(--color-ink-3)] md:inline">
             {new Date(client.dateDebut).toLocaleDateString("fr-FR", {
@@ -67,9 +68,12 @@ export function ClientGroup({
         </div>
 
         <div className="hidden items-center gap-5 md:flex">
-          <span className="inline-flex items-center gap-1.5 text-[11.5px] text-[var(--color-ink-3)]">
+          <span className="inline-flex items-center gap-1.5 text-[11.5px] text-[var(--color-ink-3)] tabular-nums">
             <Users2 size={12} strokeWidth={1.6} />
-            {client.nbSalaries} salariés
+            {client.nbSalaries >= 1000
+              ? `${(client.nbSalaries / 1000).toFixed(0)}k`
+              : client.nbSalaries}{" "}
+            salariés
           </span>
           <span className="inline-flex items-center gap-1.5 text-[11.5px] text-[var(--color-ink-3)]">
             <MapPin size={12} strokeWidth={1.6} />
@@ -106,12 +110,17 @@ export function ClientGroup({
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-[var(--color-ink-3)]">
+                <div className="flex items-center gap-3 text-[11px] text-[var(--color-ink-3)] tabular-nums">
                   <span className="truncate max-w-[280px] hidden md:inline">
                     {centre.address}
                   </span>
                   {centre.nbSalaries != null && (
-                    <span>{centre.nbSalaries} salariés</span>
+                    <span>
+                      {centre.nbSalaries >= 1000
+                        ? `${(centre.nbSalaries / 1000).toFixed(0)}k`
+                        : centre.nbSalaries}{" "}
+                      salariés
+                    </span>
                   )}
                 </div>
               </div>
@@ -137,27 +146,31 @@ function ProgressDots({
   return (
     <span className="inline-flex items-center gap-1">
       {counts.alert > 0 && (
-        <Pill status="alert" count={counts.alert} />
+        <Pill state="cancel-requested" count={counts.alert} />
       )}
-      {counts.todo > 0 && <Pill status="todo" count={counts.todo} />}
-      {counts.partial > 0 && (
-        <Pill status="partial" count={counts.partial} />
-      )}
-      {counts.done > 0 && <Pill status="done" count={counts.done} />}
+      {counts.todo > 0 && <Pill state="draft" count={counts.todo} />}
+      {counts.partial > 0 && <Pill state="to-staff" count={counts.partial} />}
+      {counts.done > 0 && <Pill state="staffed" count={counts.done} />}
     </span>
   );
 }
 
 function Pill({
-  status,
+  state,
   count,
 }: {
-  status: "done" | "partial" | "todo" | "alert";
+  state:
+    | "draft"
+    | "to-staff"
+    | "staffed"
+    | "validated"
+    | "ready"
+    | "cancel-requested";
   count: number;
 }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-white px-1.5 py-0.5 ring-1 ring-[var(--color-line)]">
-      <StaffingDot status={status} size={6} />
+      <StateDot state={state} size={6} />
       <span className="font-mono text-[10px] text-[var(--color-ink-2)]">
         {count}
       </span>
