@@ -4,13 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
+  Check,
+  ChevronDown,
   ChevronRight,
   Command,
   Search,
-  Sparkles,
 } from "lucide-react";
+import { useStore } from "@/lib/store";
+import type { RoleView } from "@/lib/types";
 
-type Item = { label: string; href: string };
+type Item = { label: string; href: string; badge?: number };
 type Section = {
   id: string;
   label: string;
@@ -20,80 +23,106 @@ type Section = {
 
 const NAV: Section[] = [
   {
+    id: "today",
+    label: "Aujourd'hui",
+    href: "/",
+  },
+  {
     id: "planning",
-    label: "Planning prévisionnel",
-    items: [{ label: "Timeline", href: "/planning/timeline" }],
+    label: "Planning",
+    items: [
+      { label: "Prévisionnel", href: "/planning/timeline" },
+      { label: "Calendrier", href: "/planning/calendrier" },
+    ],
   },
   {
     id: "clients",
     label: "Clients",
     items: [
-      { label: "Clients", href: "/clients" },
+      { label: "Liste", href: "/clients" },
+      { label: "Pipeline", href: "/clients/pipeline" },
       { label: "Centres", href: "/clients/centres" },
     ],
   },
   {
-    id: "formation",
-    label: "Formation",
+    id: "missions",
+    label: "Missions",
     items: [
-      { label: "Tableau de bord", href: "/formation/dashboard" },
-      { label: "Liste", href: "/formation/liste" },
-      { label: "Timeline", href: "/formation/timeline" },
-      { label: "Planning formateurs", href: "/formation/planning" },
-      { label: "Fichier à extraire", href: "/formation/extraire" },
-      { label: "Activités", href: "/formation/activites" },
+      { label: "Accompagnement", href: "/accompagnement/liste" },
+      { label: "Formation", href: "/formation/liste" },
     ],
   },
   {
-    id: "accompagnement",
-    label: "Accompagnement",
-    items: [
-      { label: "Liste", href: "/accompagnement/liste" },
-      { label: "Timeline", href: "/accompagnement/timeline" },
-      { label: "Demandes d'annulation", href: "/accompagnement/annulations" },
-      { label: "Pools", href: "/accompagnement/pools" },
-    ],
+    id: "pools",
+    label: "Pools",
+    href: "/accompagnement/pools",
   },
   {
     id: "logistique",
     label: "Logistique",
-    items: [
-      { label: "Liste", href: "/logistique/liste" },
-      { label: "Planning OPS", href: "/logistique/planning" },
-    ],
+    href: "/logistique/liste",
   },
   {
     id: "equipe",
     label: "Équipe",
-    items: [{ label: "Collaborateurs", href: "/equipe/collaborateurs" }],
-  },
-  { id: "espace", label: "Mon espace", href: "/mon-espace" },
-  {
-    id: "demandes",
-    label: "Demandes",
     items: [
-      { label: "Demandes d'annulation", href: "/demandes/annulations" },
-      { label: "Une idée ? Un problème ?", href: "/demandes/feedback" },
+      { label: "Collaborateurs", href: "/equipe/collaborateurs" },
+      { label: "Équité", href: "/equipe/equite" },
     ],
   },
   {
-    id: "stats",
-    label: "Statistiques",
-    items: [{ label: "Tableau de bord", href: "/stats/dashboard" }],
+    id: "inbox",
+    label: "Inbox",
+    items: [
+      { label: "Observations", href: "/demandes/observation" },
+      { label: "Annulations", href: "/demandes/annulations" },
+      { label: "Idées · Bugs", href: "/demandes/feedback" },
+    ],
+  },
+  {
+    id: "rapports",
+    label: "Rapports",
+    href: "/rapports",
+  },
+  {
+    id: "mon-espace",
+    label: "Mon espace",
+    href: "/mon-espace",
+  },
+  {
+    id: "stories",
+    label: "User Stories",
+    href: "/product/stories",
   },
 ];
 
+const ROLE_LABEL: Record<RoleView, string> = {
+  "manager-formation": "Manager Formation",
+  "manager-deployment": "Manager Déploiement",
+  ops: "OPS terrain",
+  logistique: "Logistique",
+  admin: "Admin",
+};
+
 export function Sidebar() {
   const pathname = usePathname();
+  const currentUser = useStore((s) =>
+    s.users.find((u) => u.id === s.currentUserId),
+  );
+  const roleView = useStore((s) => s.roleView);
+  const setRoleView = useStore((s) => s.setRoleView);
+  const observerRequests = useStore((s) => s.observerRequests);
+  const newObsCount = observerRequests.filter(
+    (r) => r.status === "submitted",
+  ).length;
+
   const initialOpen = new Set(
-    NAV.filter(
-      (s) =>
-        s.items?.some((i) => pathname?.startsWith(i.href)) ||
-        s.id === "accompagnement" ||
-        s.id === "demandes",
+    NAV.filter((s) =>
+      s.items?.some((i) => pathname?.startsWith(i.href)),
     ).map((s) => s.id),
   );
   const [open, setOpen] = useState<Set<string>>(initialOpen);
+  const [roleOpen, setRoleOpen] = useState(false);
 
   const toggle = (id: string) =>
     setOpen((s) => {
@@ -103,21 +132,16 @@ export function Sidebar() {
     });
 
   return (
-    <aside className="hidden md:flex h-dvh w-[252px] shrink-0 flex-col bg-[var(--color-rail)] text-[var(--color-rail-text)]">
+    <aside className="hidden md:flex h-dvh w-[248px] shrink-0 flex-col bg-[var(--color-rail)] text-[var(--color-rail-text)]">
       {/* Brand */}
       <div className="px-4 pt-4 pb-3">
-        <Link href="/" className="group flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-accent)] text-[13px] font-semibold text-white">
             P
             <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-white/90" />
           </span>
-          <span className="flex flex-col leading-none">
-            <span className="text-[14px] font-semibold tracking-tight text-[var(--color-rail-text-hi)]">
-              Popsgo
-            </span>
-            <span className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--color-rail-text)]/70">
-              Operating workspace
-            </span>
+          <span className="text-[14.5px] font-semibold tracking-tight text-[var(--color-rail-text-hi)]">
+            Popsgo
           </span>
         </Link>
       </div>
@@ -126,7 +150,7 @@ export function Sidebar() {
       <div className="px-3 pb-3">
         <button
           type="button"
-          className="group flex w-full items-center gap-2 rounded-md bg-[var(--color-rail-2)] px-2.5 py-1.5 text-left text-[12.5px] text-[var(--color-rail-text)] ring-1 ring-[var(--color-rail-line)] hover:text-[var(--color-rail-text-hi)] transition-colors"
+          className="flex w-full items-center gap-2 rounded-md bg-[var(--color-rail-2)] px-2.5 py-1.5 text-left text-[12.5px] text-[var(--color-rail-text)] ring-1 ring-[var(--color-rail-line)] hover:text-[var(--color-rail-text-hi)] transition-colors"
         >
           <Search size={13} strokeWidth={1.8} />
           <span className="flex-1 truncate">Rechercher…</span>
@@ -148,36 +172,45 @@ export function Sidebar() {
 
             if (!hasChildren && section.href) {
               const active = pathname === section.href;
+              const badge =
+                section.id === "inbox"
+                  ? newObsCount
+                  : undefined;
               return (
                 <li key={section.id}>
                   <Link
                     href={section.href}
-                    className={`flex items-center justify-between rounded-md px-2 py-1.5 text-[13px] transition-colors ${
+                    className={`flex items-center justify-between rounded-md px-2 py-1.5 text-[12.5px] font-medium transition-colors ${
                       active
                         ? "bg-[var(--color-rail-active)] text-[var(--color-rail-text-hi)]"
                         : "text-[var(--color-rail-text)] hover:text-[var(--color-rail-text-hi)]"
                     }`}
                   >
                     <span>{section.label}</span>
-                    {active && (
+                    {badge ? (
+                      <span className="rounded-sm bg-[var(--color-accent)] px-1 py-px text-[9.5px] font-semibold text-white">
+                        {badge}
+                      </span>
+                    ) : active ? (
                       <span className="h-1 w-1 rounded-full bg-[var(--color-accent)]" />
-                    )}
+                    ) : null}
                   </Link>
                 </li>
               );
             }
 
             return (
-              <li key={section.id} className="mt-1">
+              <li key={section.id} className="mt-0.5">
                 <button
                   type="button"
                   onClick={() => toggle(section.id)}
-                  className={`flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-[10.5px] uppercase tracking-[0.14em] transition-colors ${
+                  className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[12.5px] font-medium transition-colors ${
                     isActiveSection
                       ? "text-[var(--color-rail-text-hi)]"
-                      : "text-[var(--color-rail-text)]/65 hover:text-[var(--color-rail-text-hi)]"
+                      : "text-[var(--color-rail-text)] hover:text-[var(--color-rail-text-hi)]"
                   }`}
                 >
+                  <span>{section.label}</span>
                   <ChevronRight
                     size={11}
                     strokeWidth={2}
@@ -185,7 +218,6 @@ export function Sidebar() {
                       isOpen ? "rotate-90" : ""
                     }`}
                   />
-                  <span>{section.label}</span>
                 </button>
                 {isOpen && section.items && (
                   <ul className="ml-3 mt-0.5 flex flex-col border-l border-[var(--color-rail-line)] pl-2">
@@ -195,7 +227,7 @@ export function Sidebar() {
                         <li key={item.href}>
                           <Link
                             href={item.href}
-                            className={`group relative flex items-center justify-between rounded-md px-2 py-1.5 text-[12.5px] transition-colors ${
+                            className={`group relative flex items-center justify-between rounded-md px-2 py-1.5 text-[12px] transition-colors ${
                               active
                                 ? "bg-[var(--color-rail-active)] text-[var(--color-rail-text-hi)]"
                                 : "text-[var(--color-rail-text)] hover:text-[var(--color-rail-text-hi)]"
@@ -217,26 +249,59 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Footer — current user */}
+      {/* Footer — role switcher (proto) */}
       <div className="border-t border-[var(--color-rail-line)] px-3 py-2.5">
-        <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setRoleOpen(!roleOpen)}
+          className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left hover:bg-[var(--color-rail-active)]"
+        >
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#e8d9c8] to-[#c8a587] text-[11px] font-semibold text-[var(--color-ink)]">
-            CR
+            {currentUser?.initials ?? "?"}
           </span>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[12.5px] text-[var(--color-rail-text-hi)]">
-              Camille Roussel
+              {currentUser?.name}
             </div>
             <div className="truncate text-[10.5px] text-[var(--color-rail-text)]/70">
-              Manager · Déploiement
+              Rôle : {ROLE_LABEL[roleView]}
             </div>
           </div>
-          <Sparkles
-            size={13}
-            strokeWidth={1.6}
-            className="text-[var(--color-rail-text)]/60"
+          <ChevronDown
+            size={12}
+            strokeWidth={2}
+            className={`text-[var(--color-rail-text)]/60 transition-transform ${
+              roleOpen ? "rotate-180" : ""
+            }`}
           />
-        </div>
+        </button>
+        {roleOpen && (
+          <ul className="mt-1.5 flex flex-col gap-0.5 rounded-md bg-[var(--color-rail-2)] p-1">
+            {(Object.entries(ROLE_LABEL) as [RoleView, string][]).map(
+              ([role, label]) => (
+                <li key={role}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRoleView(role);
+                      setRoleOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between rounded px-2 py-1 text-[11.5px] transition-colors ${
+                      role === roleView
+                        ? "text-[var(--color-rail-text-hi)]"
+                        : "text-[var(--color-rail-text)] hover:text-[var(--color-rail-text-hi)]"
+                    }`}
+                  >
+                    <span>{label}</span>
+                    {role === roleView && (
+                      <Check size={11} strokeWidth={2.2} />
+                    )}
+                  </button>
+                </li>
+              ),
+            )}
+          </ul>
+        )}
       </div>
     </aside>
   );

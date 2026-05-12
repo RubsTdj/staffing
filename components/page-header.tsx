@@ -6,7 +6,6 @@ import { ReactNode } from "react";
 export interface PageHeaderProps {
   breadcrumb: string[];
   title: string;
-  serifTitle?: string;
   subtitle?: string;
   actionLabel?: string;
   onAction?: () => void;
@@ -18,7 +17,6 @@ export interface PageHeaderProps {
 export function PageHeader({
   breadcrumb,
   title,
-  serifTitle,
   subtitle,
   actionLabel,
   onAction,
@@ -27,8 +25,8 @@ export function PageHeader({
   right,
 }: PageHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 border-b border-[var(--color-line)] bg-[var(--color-paper)]/85 backdrop-blur-sm">
-      <div className="px-8 pt-6 pb-3">
+    <header className="sticky top-0 z-20 border-b border-[var(--color-line)] bg-[var(--color-paper)]/90 backdrop-blur-sm">
+      <div className="px-8 pt-5 pb-3">
         <nav className="flex items-center gap-1.5 text-[11.5px] text-[var(--color-ink-3)]">
           {breadcrumb.map((b, i) => (
             <span key={i} className="flex items-center gap-1.5">
@@ -49,18 +47,13 @@ export function PageHeader({
         </nav>
 
         <div className="mt-1 flex items-end justify-between gap-4">
-          <h1 className="flex items-baseline gap-2.5 text-[26px] font-medium tracking-tight text-[var(--color-ink)]">
-            <span>{title}</span>
-            {serifTitle && (
-              <span className="font-serif-italic text-[26px] text-[var(--color-accent)]">
-                {serifTitle}
-              </span>
-            )}
+          <h1 className="text-[20px] font-semibold tracking-tight text-[var(--color-ink)]">
+            {title}
           </h1>
           {right}
         </div>
         {subtitle && (
-          <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-[var(--color-ink-3)]">
+          <p className="mt-0.5 max-w-2xl text-[13px] leading-relaxed text-[var(--color-ink-3)]">
             {subtitle}
           </p>
         )}
@@ -87,7 +80,7 @@ export function PageHeader({
           <button
             type="button"
             onClick={onAction}
-            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-ink)] px-3 py-1.5 text-[12.5px] font-medium text-white shadow-[0_1px_0_rgba(255,255,255,0.06)_inset] hover:bg-[var(--color-ink-2)] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-ink)] px-3 py-1.5 text-[12.5px] font-medium text-white hover:bg-[var(--color-ink-2)] transition-colors"
           >
             {actionIcon ?? <Plus size={13} strokeWidth={2} />}
             {actionLabel}
@@ -108,7 +101,7 @@ function FilterButton({
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-[var(--color-ink-2)] hover:bg-white hover:ring-1 hover:ring-[var(--color-line)] transition-colors"
+      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium text-[var(--color-ink-2)] hover:bg-white hover:ring-1 hover:ring-[var(--color-line)] transition-colors"
     >
       {icon}
       {children}
