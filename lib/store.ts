@@ -83,6 +83,14 @@ interface State {
   toggleCentreExterne: (id: string) => void;
   createCentre: (c: Omit<Centre, "id">) => void;
 
+  // Client
+  createClient: (c: Omit<Client, "id">) => void;
+
+  // Cancel workflow
+  approveCancel: (activityId: string) => void;
+  refuseCancel: (activityId: string) => void;
+  deleteActivity: (activityId: string) => void;
+
   // Client prévisionnel
   setClientPrevisionnel: (
     id: string,
@@ -381,6 +389,33 @@ export const useStore = create<State>((set) => ({
         ...state.centres,
         { ...c, id: `ce_${Date.now()}` },
       ],
+    })),
+
+  createClient: (c) =>
+    set((state) => ({
+      clients: [
+        ...state.clients,
+        { ...c, id: `c_${Date.now()}` },
+      ],
+    })),
+
+  approveCancel: (activityId) =>
+    set((state) => ({
+      activities: state.activities.filter((a) => a.id !== activityId),
+    })),
+
+  refuseCancel: (activityId) =>
+    set((state) => ({
+      activities: state.activities.map((a) =>
+        a.id === activityId
+          ? { ...a, cancelRequested: false, status: "partial" }
+          : a,
+      ),
+    })),
+
+  deleteActivity: (activityId) =>
+    set((state) => ({
+      activities: state.activities.filter((a) => a.id !== activityId),
     })),
 
   setClientPrevisionnel: (id, patch) =>

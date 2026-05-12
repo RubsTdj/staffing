@@ -2,15 +2,34 @@
 
 import { PageHeader } from "@/components/page-header";
 import { useStore } from "@/lib/store";
+import type { Region } from "@/lib/types";
+import { Field, inputClass, Modal } from "@/components/ui/modal";
 import {
   Building2,
   CalendarDays,
   GraduationCap,
   MapPin,
   Pin,
+  Plus,
   Users2,
 } from "lucide-react";
 import { useState } from "react";
+
+const REGIONS: Region[] = [
+  "IDF",
+  "Bretagne",
+  "PACA",
+  "Nouvelle-Aquitaine",
+  "Auvergne-Rhône-Alpes",
+  "Hauts-de-France",
+  "Grand Est",
+  "Occitanie",
+  "Normandie",
+  "Centre-Val de Loire",
+  "Pays de la Loire",
+  "Bourgogne-Franche-Comté",
+  "Corse",
+];
 
 const PIPELINE_LABEL = {
   signed: {
@@ -36,8 +55,11 @@ export default function Page() {
   const centres = useStore((s) => s.centres);
   const toggleF = useStore((s) => s.toggleCentreFormateur);
   const toggleE = useStore((s) => s.toggleCentreExterne);
+  const createCentre = useStore((s) => s.createCentre);
 
   const [filter, setFilter] = useState<"all" | "formateur" | "externe">("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [presetClientId, setPresetClientId] = useState<string | undefined>();
 
   return (
     <>
@@ -47,6 +69,11 @@ export default function Page() {
         subtitle="Une carte par client · détails du client en haut · liste des centres en dessous. Marquer un centre comme formateur ou externe."
         showFilters={false}
         actionLabel="Ajouter un centre"
+        actionIcon={<Plus size={13} strokeWidth={1.8} />}
+        onAction={() => {
+          setPresetClientId(undefined);
+          setModalOpen(true);
+        }}
         right={
           <div className="flex items-center gap-1 rounded-md border border-[var(--color-line)] bg-white p-0.5">
             {(["all", "formateur", "externe"] as const).map((f) => (
@@ -194,12 +221,181 @@ export default function Page() {
                     </div>
                   </li>
                 ))}
+                <li className="px-5 py-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPresetClientId(client.id);
+                      setModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-[var(--color-line)] bg-white px-2.5 py-1 text-[11.5px] font-medium text-[var(--color-ink-3)] hover:border-[var(--color-ink)]/15 hover:text-[var(--color-ink-2)]"
+                  >
+                    <Plus size={11} strokeWidth={2} />
+                    Ajouter un centre à {client.name}
+                  </button>
+                </li>
               </ul>
             </section>
           );
         })}
       </div>
+
+      {modalOpen && (
+        <CreateCentreModal
+          presetClientId={presetClientId}
+          onClose={() => setModalOpen(false)}
+          onCreate={(c) => {
+            createCentre(c);
+            setModalOpen(false);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function CreateCentreModal({
+  presetClientId,
+  onClose,
+  onCreate,
+}: {
+  presetClientId?: string;
+  onClose: () => void;
+  onCreate: (c: {
+    clientId: string;
+    name: string;
+    address: string;
+    region: Region;
+    isFormateur: boolean;
+    isExterne: boolean;
+    nbSalaries?: number;
+  }) => void;
+}) {
+  const clients = useStore((s) => s.clients);
+  const [clientId, setClientId] = useState(presetClientId ?? "");
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [region, setRegion] = useState<Region>("IDF");
+  const [nbSalaries, setNbSalaries] = useState(20000);
+  const [isFormateur, setIsFormateur] = useState(false);
+  const [isExterne, setIsExterne] = useState(false);
+
+  const canSubmit = clientId && name && address;
+
+  return (
+    <Modal
+      title="Nouveau centre"
+      icon={<Building2 size={14} strokeWidth={1.8} className="text-[var(--color-accent)]" />}
+      onClose={onClose}
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-[var(--color-line)] bg-white px-3 py-1.5 text-[12px] font-medium text-[var(--color-ink-2)]"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={() =>
+              onCreate({
+                clientId,
+                name,
+                address,
+                region,
+                isFormateur,
+                isExterne,
+                nbSalaries: nbSalaries || undefined,
+              })
+            }
+            className="rounded-md bg-[var(--color-ink)] px-3 py-1.5 text-[12px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Créer
+          </button>
+        </>
+      }
+    >
+      <Field label="Client" hint="Le centre appartient à un client.">
+        <select
+          value={clientId}
+          onChange={(e) => setClientId(e.target.value)}
+          className={inputClass}
+          disabled={!!presetClientId}
+        >
+          <option value="">— Sélectionner —</option>
+          {clients.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Nom">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="ex : Site Rennes"
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Région">
+          <select
+            value={region}
+            onChange={(e) => setRegion(e.target.value as Region)}
+            className={inputClass}
+          >
+            {REGIONS.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Adresse">
+          <input
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="ex : 12 av. de la Bouvardière, 35000 Rennes"
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Nb salariés sur ce centre">
+          <input
+            type="number"
+            value={nbSalaries}
+            onChange={(e) => setNbSalaries(parseInt(e.target.value || "0", 10))}
+            className={inputClass}
+          />
+        </Field>
+      </div>
+      <div className="flex gap-2 pt-2">
+        <label className="flex items-center gap-2 text-[12.5px]">
+          <input
+            type="checkbox"
+            checked={isFormateur}
+            onChange={(e) => {
+              setIsFormateur(e.target.checked);
+              if (e.target.checked) setIsExterne(false);
+            }}
+          />
+          Centre formateur
+        </label>
+        <label className="flex items-center gap-2 text-[12.5px]">
+          <input
+            type="checkbox"
+            checked={isExterne}
+            onChange={(e) => {
+              setIsExterne(e.target.checked);
+              if (e.target.checked) setIsFormateur(false);
+            }}
+          />
+          Centre externe
+        </label>
+      </div>
+    </Modal>
   );
 }
 
