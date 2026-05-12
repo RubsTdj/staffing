@@ -1,6 +1,6 @@
 "use client";
 
-import { computeActivityState, computeRequired, useStore } from "@/lib/store";
+import { computeActivityState, computeRequired, getAssigneeIds, useStore } from "@/lib/store";
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -21,7 +21,7 @@ import { StateBadge } from "@/components/ui/state-badge";
 import { CategoryPill } from "@/components/ui/category-pill";
 import { ModalityIcon } from "@/components/ui/modality-icon";
 import { Avatar } from "@/components/ui/avatar";
-import type { ValidationKind } from "@/lib/types";
+import type { User, ValidationKind } from "@/lib/types";
 
 export function ActivityDrawer({ activityId }: { activityId: string }) {
   const close = useStore((s) => s.closeDrawer);
@@ -50,7 +50,8 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
 
   const client = clients.find((c) => c.id === activity.clientId);
   const centre = centres.find((c) => c.id === activity.centreId);
-  const assigned = activity.assignees
+  const assigneeIds = getAssigneeIds(activity);
+  const assigned = assigneeIds
     .map((id) => users.find((u) => u.id === id))
     .filter(Boolean) as typeof users;
   const required = computeRequired(activity, centre);
@@ -66,15 +67,55 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
     : [];
   const cdpAssigned = assigned.some((u) => u.cdpFor?.includes(client?.id ?? ""));
 
+  const pool = useStore((s) => s.pool);
+  const observerRequests = useStore((s) => s.observerRequests);
+  const activeQuarter = useStore((s) => s.activeQuarter);
+
+  const candidatesFromPool = useMemo(() => {
+    if (!activity.clientId) return [];
+    const poolUserIds = pool
+      .filter(
+        (e) =>
+          e.clientId === activity.clientId &&
+          e.quarter === activeQuarter &&
+          e.qualification !== null,
+      )
+      .map((e) => ({ userId: e.userId, qual: e.qualification }));
+    return poolUserIds
+      .map(({ userId, qual }) => ({
+        user: users.find((u) => u.id === userId),
+        qual,
+      }))
+      .filter((x) => x.user && !assigneeIds.includes(x.user!.id))
+      .filter((x) =>
+        query.trim()
+          ? x.user!.name.toLowerCase().includes(query.toLowerCase())
+          : true,
+      ) as { user: User; qual: "available" | "backup" }[];
+  }, [pool, users, assigneeIds, activity.clientId, activeQuarter, query]);
+
+  const observerCandidates = useMemo(() => {
+    return observerRequests
+      .filter(
+        (r) =>
+          r.status === "submitted" || r.status === "reviewed",
+      )
+      .filter((r) =>
+        query.trim()
+          ? r.requesterName.toLowerCase().includes(query.toLowerCase())
+          : true,
+      );
+  }, [observerRequests, query]);
+
   const candidates = useMemo(() => {
     return users
-      .filter((u) => u.role === "OPS" && !activity.assignees.includes(u.id))
+      .filter((u) => u.role === "OPS" && !assigneeIds.includes(u.id))
       .filter((u) =>
         query.trim()
           ? u.name.toLowerCase().includes(query.toLowerCase())
           : true,
       );
-  }, [users, activity.assignees, query]);
+  }, [users, assigneeIds, query]);
 
   const handleAssign = (userId: string) => {
     const u = users.find((x) => x.id === userId);
@@ -272,7 +313,9 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
                 </div>
               ) : (
                 <ul className="space-y-1.5">
-                  {assigned.map((u) => {
+                  {activity.assignments.map((asg) => {
+                    const u = users.find((x) => x.id === asg.userId);
+                    if (!u) return null;
                     const isCdp = u.cdpFor?.includes(client?.id ?? "");
                     return (
                       <li
@@ -295,6 +338,12 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
                             {u.level} · {u.team}
                           </div>
                         </div>
+                        <DaysControl
+                          days={asg.days}
+                          onChange={(d) =>
+                            useStore.getState().setAssignmentDays(activity.id, u.id, d)
+                          }
+                        />
                         <button
                           type="button"
                           onClick={() => unassignUser(activity.id, u.id)}
@@ -309,7 +358,7 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
                 </ul>
               )}
 
-              {/* Add */}
+              {/* Add — pool qualifié + observateurs volontaires + tous */}
               <div className="mt-3 rounded-lg border border-[var(--color-line)] bg-white">
                 <div className="flex items-center gap-2 border-b border-[var(--color-line)] px-2.5 py-1.5">
                   <Plus
@@ -320,42 +369,146 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Ajouter un collaborateur…"
+                    placeholder="Piocher dans le pool ou les observateurs…"
                     className="flex-1 bg-transparent text-[12.5px] outline-none placeholder:text-[var(--color-ink-3)]"
                   />
                 </div>
-                <ul className="max-h-48 overflow-y-auto py-1">
-                  {candidates.slice(0, 6).map((u) => {
-                    const isObsBlocked =
-                      u.level === "Observateur" && observerCount >= 1;
-                    return (
-                      <li key={u.id}>
-                        <button
-                          type="button"
-                          disabled={isObsBlocked}
-                          onClick={() => handleAssign(u.id)}
-                          className={`flex w-full items-center gap-2.5 px-2.5 py-1.5 text-left text-[12.5px] transition-colors ${
-                            isObsBlocked
-                              ? "cursor-not-allowed opacity-50"
-                              : "hover:bg-[var(--color-line-2)]"
-                          }`}
-                        >
-                          <Avatar user={u} size={22} />
-                          <span className="flex-1 truncate">{u.name}</span>
-                          <span className="text-[10.5px] text-[var(--color-ink-3)]">
-                            {u.level}
-                            {isObsBlocked && " · bloqué"}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                  {candidates.length === 0 && (
-                    <li className="px-2.5 py-3 text-center text-[11.5px] text-[var(--color-ink-3)]">
-                      Aucun candidat
-                    </li>
+                <div className="max-h-72 overflow-y-auto py-1">
+                  {/* Pool qualifié pour ce client */}
+                  {candidatesFromPool.length > 0 && (
+                    <>
+                      <div className="px-2.5 py-1 text-[9.5px] uppercase tracking-[0.12em] text-[var(--color-ink-3)]">
+                        Pool qualifié — {activity.clientId ? "client" : ""}
+                      </div>
+                      <ul>
+                        {candidatesFromPool.slice(0, 8).map(({ user: u, qual }) => {
+                          const isObsBlocked =
+                            u.level === "Observateur" && observerCount >= 1;
+                          return (
+                            <li key={u.id}>
+                              <button
+                                type="button"
+                                disabled={isObsBlocked}
+                                onClick={() => handleAssign(u.id)}
+                                className={`flex w-full items-center gap-2.5 px-2.5 py-1.5 text-left text-[12.5px] transition-colors ${
+                                  isObsBlocked
+                                    ? "cursor-not-allowed opacity-50"
+                                    : "hover:bg-[var(--color-line-2)]"
+                                }`}
+                              >
+                                <Avatar user={u} size={22} />
+                                <span className="flex-1 truncate">{u.name}</span>
+                                <span
+                                  className={`rounded-sm px-1 py-px text-[9.5px] font-medium uppercase tracking-[0.1em] ${
+                                    qual === "available"
+                                      ? "bg-[var(--color-tint-sage)] text-[var(--color-tint-sage-ink)]"
+                                      : "bg-[var(--color-tint-sand)] text-[var(--color-tint-sand-ink)]"
+                                  }`}
+                                >
+                                  {qual === "available" ? "Dispo" : "Backup"}
+                                </span>
+                                <span className="text-[10.5px] text-[var(--color-ink-3)]">
+                                  {u.level}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </>
                   )}
-                </ul>
+                  {/* Observateurs volontaires */}
+                  {observerCandidates.length > 0 && (
+                    <>
+                      <div className="mt-1 px-2.5 py-1 text-[9.5px] uppercase tracking-[0.12em] text-[var(--color-ink-3)]">
+                        Observateurs volontaires — {observerCount}/1 utilisé
+                      </div>
+                      <ul>
+                        {observerCandidates.slice(0, 4).map((r) => (
+                          <li key={r.id}>
+                            <button
+                              type="button"
+                              disabled={observerCount >= 1}
+                              className={`flex w-full items-center gap-2.5 px-2.5 py-1.5 text-left text-[12.5px] transition-colors ${
+                                observerCount >= 1
+                                  ? "cursor-not-allowed opacity-50"
+                                  : "hover:bg-[var(--color-line-2)]"
+                              }`}
+                              title="Affecter l'observateur à cette mission (mock)"
+                            >
+                              <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[var(--color-line-2)] text-[10px] font-semibold text-[var(--color-ink-2)]">
+                                {r.requesterName
+                                  .split(" ")
+                                  .map((p) => p[0])
+                                  .slice(0, 2)
+                                  .join("")}
+                              </span>
+                              <span className="flex-1 truncate">
+                                {r.requesterName}
+                              </span>
+                              <span className="rounded-sm bg-[var(--color-line-2)] px-1 py-px text-[9.5px] font-medium uppercase tracking-[0.1em] text-[var(--color-ink-3)]">
+                                {r.requesterTeam}
+                              </span>
+                              <span className="text-[10.5px] text-[var(--color-ink-3)]">
+                                {r.durationDays}j
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                  {/* Autres collabs (hors pool) */}
+                  {candidates.length > 0 && (
+                    <>
+                      <div className="mt-1 px-2.5 py-1 text-[9.5px] uppercase tracking-[0.12em] text-[var(--color-ink-3)]">
+                        Autres collaborateurs OPS
+                      </div>
+                      <ul>
+                        {candidates
+                          .filter(
+                            (u) =>
+                              !candidatesFromPool.some(
+                                (x) => x.user.id === u.id,
+                              ),
+                          )
+                          .slice(0, 4)
+                          .map((u) => {
+                            const isObsBlocked =
+                              u.level === "Observateur" && observerCount >= 1;
+                            return (
+                              <li key={u.id}>
+                                <button
+                                  type="button"
+                                  disabled={isObsBlocked}
+                                  onClick={() => handleAssign(u.id)}
+                                  className={`flex w-full items-center gap-2.5 px-2.5 py-1.5 text-left text-[12.5px] transition-colors ${
+                                    isObsBlocked
+                                      ? "cursor-not-allowed opacity-50"
+                                      : "hover:bg-[var(--color-line-2)]"
+                                  }`}
+                                >
+                                  <Avatar user={u} size={22} />
+                                  <span className="flex-1 truncate">{u.name}</span>
+                                  <span className="text-[10.5px] text-[var(--color-ink-3)]">
+                                    {u.level}
+                                    {isObsBlocked && " · bloqué"}
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                      </ul>
+                    </>
+                  )}
+                  {candidatesFromPool.length === 0 &&
+                    observerCandidates.length === 0 &&
+                    candidates.length === 0 && (
+                      <div className="px-2.5 py-3 text-center text-[11.5px] text-[var(--color-ink-3)]">
+                        Aucun candidat
+                      </div>
+                    )}
+                </div>
               </div>
 
               {obsAlert && (
@@ -504,6 +657,38 @@ function Meta({
       <div className="mt-0.5 truncate text-[12.5px] text-[var(--color-ink)]">
         {children}
       </div>
+    </div>
+  );
+}
+
+function DaysControl({
+  days,
+  onChange,
+}: {
+  days: number;
+  onChange: (d: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-0.5 rounded-md border border-[var(--color-line)] bg-white">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(1, days - 1))}
+        className="px-1.5 py-0.5 text-[12px] text-[var(--color-ink-3)] hover:text-[var(--color-ink)]"
+        aria-label="Moins de jours"
+      >
+        −
+      </button>
+      <span className="min-w-[34px] px-1 text-center text-[11.5px] font-medium tabular-nums">
+        {days}j
+      </span>
+      <button
+        type="button"
+        onClick={() => onChange(days + 1)}
+        className="px-1.5 py-0.5 text-[12px] text-[var(--color-ink-3)] hover:text-[var(--color-ink)]"
+        aria-label="Plus de jours"
+      >
+        +
+      </button>
     </div>
   );
 }

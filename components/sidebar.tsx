@@ -10,98 +10,99 @@ import {
   Command,
   Search,
 } from "lucide-react";
-import { useStore } from "@/lib/store";
+import { canAccess, useStore } from "@/lib/store";
 import type { RoleView } from "@/lib/types";
 
-type Item = { label: string; href: string; badge?: number };
+type Item = { label: string; href: string; nodeId: string; badge?: number };
 type Section = {
   id: string;
   label: string;
   href?: string;
+  nodeId?: string;
   items?: Item[];
 };
 
 const NAV: Section[] = [
+  { id: "today", label: "Aujourd'hui", href: "/", nodeId: "today" },
   {
-    id: "today",
-    label: "Aujourd'hui",
-    href: "/",
-  },
-  {
-    id: "planning",
-    label: "Planning",
+    id: "previsionnel",
+    label: "Prévisionnel",
+    nodeId: "previsionnel",
     items: [
-      { label: "Prévisionnel", href: "/planning/timeline" },
-      { label: "Calendrier", href: "/planning/calendrier" },
+      {
+        label: "Pipeline",
+        href: "/previsionnel/pipeline",
+        nodeId: "previsionnel",
+      },
+      {
+        label: "Timeline déploiement",
+        href: "/previsionnel/timeline",
+        nodeId: "previsionnel",
+      },
     ],
   },
   {
     id: "clients",
-    label: "Clients",
+    label: "Clients & Centres",
+    nodeId: "clients",
     items: [
-      { label: "Liste", href: "/clients" },
-      { label: "Pipeline", href: "/clients/pipeline" },
-      { label: "Centres", href: "/clients/centres" },
+      { label: "Clients", href: "/clients", nodeId: "clients" },
+      { label: "Centres", href: "/clients/centres", nodeId: "centres" },
     ],
   },
   {
-    id: "missions",
-    label: "Missions",
+    id: "formations",
+    label: "Formations",
+    nodeId: "formations",
     items: [
-      { label: "Accompagnement", href: "/accompagnement/liste" },
-      { label: "Formation", href: "/formation/liste" },
+      { label: "Liste", href: "/formation/liste", nodeId: "formations" },
+      {
+        label: "Timeline formateurs",
+        href: "/formation/timeline-formateurs",
+        nodeId: "formateurs",
+      },
     ],
   },
   {
-    id: "pools",
-    label: "Pools",
-    href: "/accompagnement/pools",
+    id: "accompagnements",
+    label: "Accompagnements",
+    nodeId: "accompagnements",
+    items: [
+      { label: "Liste", href: "/accompagnement/liste", nodeId: "accompagnements" },
+      { label: "Pools", href: "/accompagnement/pools", nodeId: "pools" },
+    ],
   },
-  {
-    id: "logistique",
-    label: "Logistique",
-    href: "/logistique/liste",
-  },
+  { id: "logistique", label: "Logistique", href: "/logistique/liste", nodeId: "logistique" },
   {
     id: "equipe",
     label: "Équipe",
+    nodeId: "equipe",
     items: [
-      { label: "Collaborateurs", href: "/equipe/collaborateurs" },
-      { label: "Équité", href: "/equipe/equite" },
+      { label: "Collaborateurs", href: "/equipe/collaborateurs", nodeId: "equipe" },
+      { label: "Équité", href: "/equipe/equite", nodeId: "equipe" },
     ],
   },
   {
     id: "inbox",
     label: "Inbox",
+    nodeId: "inbox",
     items: [
-      { label: "Observations", href: "/demandes/observation" },
-      { label: "Annulations", href: "/demandes/annulations" },
-      { label: "Idées · Bugs", href: "/demandes/feedback" },
+      { label: "Observations", href: "/demandes/observation", nodeId: "inbox" },
+      { label: "Annulations", href: "/demandes/annulations", nodeId: "inbox" },
+      { label: "Idées · Bugs", href: "/demandes/feedback", nodeId: "inbox" },
     ],
   },
-  {
-    id: "rapports",
-    label: "Rapports",
-    href: "/rapports",
-  },
-  {
-    id: "mon-espace",
-    label: "Mon espace",
-    href: "/mon-espace",
-  },
-  {
-    id: "stories",
-    label: "User Stories",
-    href: "/product/stories",
-  },
+  { id: "rapports", label: "Rapports", href: "/rapports", nodeId: "rapports" },
+  { id: "mon-espace", label: "Mon espace", href: "/mon-espace", nodeId: "mon-espace" },
+  { id: "stories", label: "User Stories", href: "/product/stories", nodeId: "stories" },
 ];
 
 const ROLE_LABEL: Record<RoleView, string> = {
+  admin: "Admin",
   "manager-formation": "Manager Formation",
   "manager-deployment": "Manager Déploiement",
   ops: "OPS terrain",
   logistique: "Logistique",
-  admin: "Admin",
 };
 
 export function Sidebar() {
@@ -116,10 +117,14 @@ export function Sidebar() {
     (r) => r.status === "submitted",
   ).length;
 
+  const accessibleNav = NAV.filter((s) =>
+    s.nodeId ? canAccess(roleView, s.nodeId) : true,
+  );
+
   const initialOpen = new Set(
-    NAV.filter((s) =>
-      s.items?.some((i) => pathname?.startsWith(i.href)),
-    ).map((s) => s.id),
+    accessibleNav
+      .filter((s) => s.items?.some((i) => pathname?.startsWith(i.href)))
+      .map((s) => s.id),
   );
   const [open, setOpen] = useState<Set<string>>(initialOpen);
   const [roleOpen, setRoleOpen] = useState(false);
@@ -133,7 +138,6 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex h-dvh w-[248px] shrink-0 flex-col bg-[var(--color-rail)] text-[var(--color-rail-text)]">
-      {/* Brand */}
       <div className="px-4 pt-4 pb-3">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-accent)] text-[13px] font-semibold text-white">
@@ -146,7 +150,6 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Search */}
       <div className="px-3 pb-3">
         <button
           type="button"
@@ -160,22 +163,22 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2 pb-4">
         <ul className="flex flex-col gap-0.5">
-          {NAV.map((section) => {
+          {accessibleNav.map((section) => {
             const hasChildren = !!section.items?.length;
+            const accessibleItems = section.items?.filter((i) =>
+              canAccess(roleView, i.nodeId),
+            );
             const isOpen = open.has(section.id);
-            const isActiveSection = section.items?.some((i) =>
+            const isActiveSection = accessibleItems?.some((i) =>
               pathname?.startsWith(i.href),
             );
 
             if (!hasChildren && section.href) {
               const active = pathname === section.href;
               const badge =
-                section.id === "inbox"
-                  ? newObsCount
-                  : undefined;
+                section.id === "inbox" ? newObsCount : undefined;
               return (
                 <li key={section.id}>
                   <Link
@@ -199,6 +202,8 @@ export function Sidebar() {
               );
             }
 
+            if (!accessibleItems || accessibleItems.length === 0) return null;
+
             return (
               <li key={section.id} className="mt-0.5">
                 <button
@@ -219,9 +224,9 @@ export function Sidebar() {
                     }`}
                   />
                 </button>
-                {isOpen && section.items && (
+                {isOpen && (
                   <ul className="ml-3 mt-0.5 flex flex-col border-l border-[var(--color-rail-line)] pl-2">
-                    {section.items.map((item) => {
+                    {accessibleItems.map((item) => {
                       const active = pathname === item.href;
                       return (
                         <li key={item.href}>
@@ -249,7 +254,6 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Footer — role switcher (proto) */}
       <div className="border-t border-[var(--color-rail-line)] px-3 py-2.5">
         <button
           type="button"
@@ -264,7 +268,7 @@ export function Sidebar() {
               {currentUser?.name}
             </div>
             <div className="truncate text-[10.5px] text-[var(--color-rail-text)]/70">
-              Rôle : {ROLE_LABEL[roleView]}
+              {ROLE_LABEL[roleView]}
             </div>
           </div>
           <ChevronDown

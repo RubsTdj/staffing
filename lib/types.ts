@@ -50,6 +50,11 @@ export interface User {
   monthlyTripCapacity?: number; // pour l'équité / surcharge
 }
 
+export interface Assignment {
+  userId: string;
+  days: number; // durée effective de présence (peut être < durée totale de l'activité)
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -62,8 +67,17 @@ export interface Client {
   estFormateurs?: number;
   estSemainesFormation?: number;
   estAccompagnateurs?: number;
+  // Prévisionnel (CR pipeline)
+  dateSignaturePrev?: string;     // date estimée de signature
+  nbSemainesDeploiement?: number; // durée totale du déploiement
+  dateBascule?: string;            // J0 cutover (mardi)
+  estJoursFormation?: number;      // nb de jours-homme formation
+  estJoursAccomp?: number;         // nb de jours-homme accomp
+  confidence?: number;             // 0-100 pour pipeline
   // Manager Référent / TL Déploiement
   tlDeploymentId?: string;
+  // Personne responsable du prévisionnel pour ce client
+  prevOwnerId?: string;
 }
 
 export interface Centre {
@@ -73,6 +87,7 @@ export interface Centre {
   address: string;
   region: Region;
   isFormateur: boolean;
+  isExterne?: boolean; // centre externe (loué, hors locaux client) — mutuellement exclusif avec isFormateur
   nbSalaries?: number;
 }
 
@@ -84,16 +99,16 @@ export interface Activity {
   centreId?: string;
   dateStart: string;
   dateEnd: string;
-  assignees: string[];
+  // Assignements riches : durée par personne
+  assignments: Assignment[];
   status: StaffingStatusKind;
   validation: ValidationKind;
   modality: Modality;
   cancelRequested?: boolean;
-  isVeille?: boolean; // pour calcul prime (0.5j)
+  isVeille?: boolean;
   isExternalResource?: boolean;
-  cdpAssigned?: boolean; // dérivé (pour règle CDP min)
+  cdpAssigned?: boolean;
   formateurReferentId?: string;
-  // Pour activité "Off" : un seul user concerné = assignees[0]
 }
 
 export type FeedbackKind = "Idée" | "Bug" | "Question" | "Amélioration";

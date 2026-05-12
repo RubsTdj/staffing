@@ -1,6 +1,6 @@
 "use client";
 
-import { useStore } from "@/lib/store";
+import { getAssigneeIds, useStore } from "@/lib/store";
 import { Avatar } from "@/components/ui/avatar";
 import { X } from "lucide-react";
 
@@ -8,7 +8,7 @@ export function UserDrawer({ userId }: { userId: string }) {
   const close = useStore((s) => s.closeDrawer);
   const user = useStore((s) => s.users.find((u) => u.id === userId));
   const activities = useStore((s) =>
-    s.activities.filter((a) => a.assignees.includes(userId)),
+    s.activities.filter((a) => getAssigneeIds(a).includes(userId)),
   );
   if (!user) return null;
 

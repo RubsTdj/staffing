@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/page-header";
-import { useStore, computeActivityState } from "@/lib/store";
+import { useStore, computeActivityState, getAssigneeIds } from "@/lib/store";
 import {
   CalendarDays,
   Hotel,
@@ -54,7 +54,7 @@ export default function Page() {
               {toBook.map((a) => {
                 const client = clients.find((c) => c.id === a.clientId);
                 const centre = centres.find((c) => c.id === a.centreId);
-                const assigned = a.assignees
+                const assigned = getAssigneeIds(a)
                   .map((id) => users.find((u) => u.id === id))
                   .filter(Boolean) as typeof users;
                 const start = new Date(a.dateStart);

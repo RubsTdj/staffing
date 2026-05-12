@@ -2,7 +2,7 @@
 
 import { ArrowRight, CalendarDays, Crown, MoonStar } from "lucide-react";
 import type { Activity } from "@/lib/types";
-import { computeActivityState, computeRequired, useStore } from "@/lib/store";
+import { computeActivityState, computeRequired, getAssigneeIds, useStore } from "@/lib/store";
 import { StateBadge } from "@/components/ui/state-badge";
 import { CategoryPill } from "@/components/ui/category-pill";
 import { AvatarStack } from "@/components/ui/avatar";
@@ -13,7 +13,7 @@ export function MissionRow({ activity }: { activity: Activity }) {
   const centres = useStore((s) => s.centres);
   const duplicate = useStore((s) => s.duplicateActivity);
 
-  const assigned = activity.assignees
+  const assigned = getAssigneeIds(activity)
     .map((id) => users.find((u) => u.id === id))
     .filter(Boolean) as typeof users;
   const centre = centres.find((c) => c.id === activity.centreId);
