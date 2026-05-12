@@ -35,7 +35,7 @@ export default function Page() {
         title="Missions à organiser"
         subtitle="Toutes les missions au statut Staffing Validé — trains, hébergements, agendas."
         showFilters={false}
-        actionLabel="Exporter CSV May"
+        actionLabel="Exporter CSV Logistique"
         actionIcon={<TrainFront size={13} strokeWidth={1.8} />}
       />
 

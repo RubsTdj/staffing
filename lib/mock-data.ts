@@ -16,8 +16,8 @@ export const TODAY = "2026-05-12";
 export const initialUsers: User[] = [
   {
     id: "u1",
-    name: "Camille Roussel",
-    initials: "CR",
+    name: "Alice Martin",
+    initials: "AM",
     role: "Manager",
     team: "Déploiement",
     level: "Senior",
@@ -26,8 +26,8 @@ export const initialUsers: User[] = [
   },
   {
     id: "u2",
-    name: "Théo Lefèvre",
-    initials: "TL",
+    name: "Bruno Lefèvre",
+    initials: "BL",
     role: "OPS",
     team: "Déploiement",
     level: "Senior",
@@ -35,8 +35,8 @@ export const initialUsers: User[] = [
   },
   {
     id: "u3",
-    name: "Inès Bouchard",
-    initials: "IB",
+    name: "Chloé Bernard",
+    initials: "CB",
     role: "OPS",
     team: "Déploiement",
     level: "Junior",
@@ -44,8 +44,8 @@ export const initialUsers: User[] = [
   },
   {
     id: "u4",
-    name: "Léa Morvan",
-    initials: "LM",
+    name: "David Dupont",
+    initials: "DD",
     role: "OPS",
     team: "Déploiement",
     level: "Observateur",
@@ -53,8 +53,8 @@ export const initialUsers: User[] = [
   },
   {
     id: "u5",
-    name: "Mehdi Aït-Kaci",
-    initials: "MA",
+    name: "Émilie Petit",
+    initials: "EP",
     role: "Manager",
     team: "Déploiement",
     level: "Senior",
@@ -63,8 +63,8 @@ export const initialUsers: User[] = [
   },
   {
     id: "u6",
-    name: "Sarah Cohen",
-    initials: "SC",
+    name: "François Robert",
+    initials: "FR",
     role: "OPS",
     team: "Formation",
     level: "Senior",
@@ -72,8 +72,8 @@ export const initialUsers: User[] = [
   },
   {
     id: "u7",
-    name: "Julien Pasquier",
-    initials: "JP",
+    name: "Gabrielle Thomas",
+    initials: "GT",
     role: "OPS",
     team: "Déploiement",
     level: "Observateur",
@@ -81,16 +81,16 @@ export const initialUsers: User[] = [
   },
   {
     id: "u8",
-    name: "Noémie Tanguy",
-    initials: "NT",
+    name: "Hugo Durand",
+    initials: "HD",
     role: "Logistique",
     team: "Déploiement",
     level: "Senior",
   },
   {
     id: "u9",
-    name: "Adrien Vassard",
-    initials: "AV",
+    name: "Iris Moreau",
+    initials: "IM",
     role: "OPS",
     team: "Formation",
     level: "Junior",
@@ -98,16 +98,16 @@ export const initialUsers: User[] = [
   },
   {
     id: "u10",
-    name: "Manon Bréhier",
-    initials: "MB",
+    name: "Julien Simon",
+    initials: "JS",
     role: "Admin",
     team: "Déploiement",
     level: "Senior",
   },
   {
     id: "u11",
-    name: "Clara Ferret",
-    initials: "CF",
+    name: "Karine Michel",
+    initials: "KM",
     role: "Manager",
     team: "Déploiement",
     level: "Senior",
@@ -115,16 +115,16 @@ export const initialUsers: User[] = [
   },
   {
     id: "u12",
-    name: "Siméon Bertrand",
-    initials: "SB",
+    name: "Laurent Garcia",
+    initials: "LG",
     role: "Manager",
     team: "Formation",
     level: "Senior",
   },
   {
     id: "u13",
-    name: "May Delacroix",
-    initials: "MD",
+    name: "Marie Roux",
+    initials: "MR",
     role: "Logistique",
     team: "Déploiement",
     level: "Senior",
@@ -134,7 +134,7 @@ export const initialUsers: User[] = [
 export const initialClients: Client[] = [
   {
     id: "c1",
-    name: "PST 35",
+    name: "McDonald's France",
     kind: "SPSTI",
     pipeline: "signed",
     dateDebut: "2026-04-06",
@@ -154,7 +154,7 @@ export const initialClients: Client[] = [
   },
   {
     id: "c2",
-    name: "AIST 84",
+    name: "Uber EMEA",
     kind: "SPSTI",
     pipeline: "signed",
     dateDebut: "2026-05-04",
@@ -174,7 +174,7 @@ export const initialClients: Client[] = [
   },
   {
     id: "c3",
-    name: "Prezoa Autonome",
+    name: "Apple Retail",
     kind: "Autonome",
     pipeline: "verbal",
     dateDebut: "2026-09-01",
@@ -194,7 +194,7 @@ export const initialClients: Client[] = [
   },
   {
     id: "c4",
-    name: "AIST 78",
+    name: "Hermès Production",
     kind: "SPSTI",
     pipeline: "intent",
     dateDebut: "2026-10-13",
@@ -213,7 +213,7 @@ export const initialClients: Client[] = [
   },
   {
     id: "c5",
-    name: "SIST 33",
+    name: "Carrefour Hyper",
     kind: "SPSTI",
     pipeline: "suspect",
     dateDebut: "2027-01-12",
@@ -236,7 +236,7 @@ export const initialCentres: Centre[] = [
   {
     id: "ce1",
     clientId: "c1",
-    name: "Rennes Beaulieu",
+    name: "Site Rennes",
     address: "12 av. de la Bouvardière, 35000 Rennes",
     region: "Bretagne",
     isFormateur: true,
@@ -245,7 +245,7 @@ export const initialCentres: Centre[] = [
   {
     id: "ce2",
     clientId: "c1",
-    name: "Saint-Malo Centre",
+    name: "Site Saint-Malo",
     address: "4 rue du Port, 35400 Saint-Malo",
     region: "Bretagne",
     isFormateur: false,
@@ -255,7 +255,7 @@ export const initialCentres: Centre[] = [
   {
     id: "ce3",
     clientId: "c1",
-    name: "Fougères Industrie",
+    name: "Site Fougères",
     address: "ZA La Galaisière, 35300 Fougères",
     region: "Bretagne",
     isFormateur: false,
@@ -265,7 +265,7 @@ export const initialCentres: Centre[] = [
   {
     id: "ce4",
     clientId: "c2",
-    name: "Avignon Cap-Sud",
+    name: "Site Avignon",
     address: "rue Pierre Seghers, 84000 Avignon",
     region: "PACA",
     isFormateur: true,
@@ -274,7 +274,7 @@ export const initialCentres: Centre[] = [
   {
     id: "ce5",
     clientId: "c2",
-    name: "Carpentras",
+    name: "Site Carpentras",
     address: "av. Jean Henri Fabre, 84200 Carpentras",
     region: "PACA",
     isFormateur: false,
@@ -283,7 +283,7 @@ export const initialCentres: Centre[] = [
   {
     id: "ce6",
     clientId: "c3",
-    name: "Bordeaux Lac",
+    name: "Site Bordeaux",
     address: "Esplanade Charles de Gaulle, 33300 Bordeaux",
     region: "Nouvelle-Aquitaine",
     isFormateur: true,
@@ -292,7 +292,7 @@ export const initialCentres: Centre[] = [
   {
     id: "ce7",
     clientId: "c3",
-    name: "Pau",
+    name: "Site Pau",
     address: "bd des Pyrénées, 64000 Pau",
     region: "Nouvelle-Aquitaine",
     isFormateur: false,
@@ -301,7 +301,7 @@ export const initialCentres: Centre[] = [
   {
     id: "ce8",
     clientId: "c4",
-    name: "Saint-Quentin",
+    name: "Site Montigny",
     address: "av. de la Vague, 78180 Montigny-le-Bretonneux",
     region: "IDF",
     isFormateur: true,
@@ -436,9 +436,9 @@ export const initialActivities: Activity[] = [
   },
 ];
 
-// Pools — entrées de TLs/Managers OPS, certaines déjà qualifiées par Clara
+// Pools — entrées de TLs/Managers OPS, certaines déjà qualifiées par le Manager Déploiement
 export const initialPoolEntries: PoolEntry[] = [
-  // PST 35 — équipe pour Q2 2026
+  // c1 — équipe pour Q2 2026
   {
     id: "p1",
     userId: "u2",
@@ -496,7 +496,7 @@ export const initialPoolEntries: PoolEntry[] = [
     rawAvailability: "available",
     qualification: null,
   },
-  // AIST 84
+  // c2
   {
     id: "p6",
     userId: "u2",
@@ -547,7 +547,7 @@ export const initialObserverRequests: ObserverRequest[] = [
   {
     id: "obs1",
     requesterId: "u_ext1",
-    requesterName: "Mathilde Aubert",
+    requesterName: "Nina Schmidt",
     requesterTeam: "Produit",
     managerId: "u11",
     reason:
@@ -561,7 +561,7 @@ export const initialObserverRequests: ObserverRequest[] = [
   {
     id: "obs2",
     requesterId: "u_ext2",
-    requesterName: "Karim El Idrissi",
+    requesterName: "Olivier Dubois",
     requesterTeam: "Sales",
     managerId: "u11",
     reason:
@@ -575,7 +575,7 @@ export const initialObserverRequests: ObserverRequest[] = [
   {
     id: "obs3",
     requesterId: "u7",
-    requesterName: "Julien Pasquier",
+    requesterName: "Gabrielle Thomas",
     requesterTeam: "OPS",
     managerId: "u5",
     reason: "Montée en compétences sur l'accompagnement Autonome.",
@@ -604,7 +604,7 @@ export const initialComments: Comment[] = [
     id: "cm1",
     activityId: "a3",
     authorId: "u11",
-    body: "Bien noté pour le passage Senior + CDP, on garde Inès en doublure.",
+    body: "Bien noté pour le passage Senior + CDP, on garde Chloé en doublure.",
     mentions: ["u1"],
     createdAt: "2026-05-09T11:20:00",
   },

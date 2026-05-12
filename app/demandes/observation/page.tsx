@@ -35,7 +35,7 @@ export default function Page() {
   const observerRequests = useStore((s) => s.observerRequests);
   const addObserverRequest = useStore((s) => s.addObserverRequest);
   const setObserverStatus = useStore((s) => s.setObserverStatus);
-  const isClara = roleView === "manager-deployment" || roleView === "admin";
+  const isCoordinator = roleView === "manager-deployment" || roleView === "admin";
 
   const [open, setOpen] = useState(false);
 
@@ -58,7 +58,7 @@ export default function Page() {
       />
 
       <div className="space-y-6 px-8 py-6">
-        {!isClara && (
+        {!isCoordinator && (
           <p className="rounded-md border border-[var(--color-line)] bg-white px-3 py-2 text-[12px] text-[var(--color-ink-3)]">
             La centralisation des demandes est gérée par le Manager Déploiement.
             Tu vois ici l'état des demandes soumises.
@@ -139,7 +139,7 @@ export default function Page() {
                         )}
                       </div>
                     </div>
-                    {isClara && r.status === "submitted" && (
+                    {isCoordinator && r.status === "submitted" && (
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
@@ -163,7 +163,7 @@ export default function Page() {
                         </button>
                       </div>
                     )}
-                    {isClara && r.status === "reviewed" && (
+                    {isCoordinator && r.status === "reviewed" && (
                       <button
                         type="button"
                         onClick={() => setObserverStatus(r.id, "assigned")}
@@ -242,7 +242,7 @@ function NewRequestModal({
             <input
               value={requesterName}
               onChange={(e) => setName(e.target.value)}
-              placeholder="ex : Mathilde Aubert"
+              placeholder="ex : Nina Schmidt"
               className="w-full rounded-md border border-[var(--color-line)] bg-white px-2.5 py-1.5 text-[13px] outline-none focus:border-[var(--color-ink)]/30"
             />
           </Field>

@@ -33,8 +33,8 @@ export default function Page() {
   const qualifyPoolEntry = useStore((s) => s.qualifyPoolEntry);
   const upsertPoolEntry = useStore((s) => s.upsertPoolEntry);
 
-  // mode: Clara qualifie, sinon TL/Manager OPS remplit
-  const isClara = roleView === "manager-deployment";
+  // mode: Manager Déploiement qualifie, sinon TL/Manager OPS remplit
+  const isCoordinator = roleView === "manager-deployment";
 
   const grouped = useMemo(() => {
     return clients
@@ -55,8 +55,8 @@ export default function Page() {
         breadcrumb={["Pools"]}
         title="Constitution des pools"
         subtitle={
-          isClara
-            ? "Mode qualification — Clara valide ou downgrade les entrées des TL."
+          isCoordinator
+            ? "Mode qualification — le Manager Déploiement valide ou downgrade les entrées des TL."
             : "Mode TL/Manager OPS — renseigne ton équipe pour le trimestre."
         }
         showFilters={false}
@@ -172,7 +172,7 @@ export default function Page() {
                       <Badge value={e.rawAvailability} />
                       {/* Qualification controls */}
                       <div className="flex items-center gap-1">
-                        {isClara ? (
+                        {isCoordinator ? (
                           (["available", "backup", "unavailable"] as const).map(
                             (q) => (
                               <button
@@ -203,7 +203,7 @@ export default function Page() {
                           </span>
                         ) : (
                           <span className="text-[11px] text-[var(--color-ink-3)]">
-                            En attente de qualif. Clara
+                            En attente de qualif. Manager Dépl.
                           </span>
                         )}
                       </div>
@@ -217,7 +217,7 @@ export default function Page() {
                 })}
               </ul>
 
-              {!isClara && (
+              {!isCoordinator && (
                 <AddToPoolRow
                   clientId={client.id}
                   filledById={currentUserId}

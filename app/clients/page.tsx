@@ -2,11 +2,20 @@
 
 import { PageHeader } from "@/components/page-header";
 import { useStore } from "@/lib/store";
-import { Building2, ChevronRight, MapPin, Users2 } from "lucide-react";
+import type { ClientKind, ClientPipeline } from "@/lib/types";
+import { Field, inputClass, Modal } from "@/components/ui/modal";
+import { Building2, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
-const PIPELINE_LABEL = {
-  signed: { label: "Signé", tint: "bg-[var(--color-tint-sage)] text-[var(--color-tint-sage-ink)]" },
+const PIPELINE_LABEL: Record<
+  ClientPipeline,
+  { label: string; tint: string }
+> = {
+  signed: {
+    label: "Signé",
+    tint: "bg-[var(--color-tint-sage)] text-[var(--color-tint-sage-ink)]",
+  },
   verbal: {
     label: "Accord de principe",
     tint: "bg-[var(--color-tint-sand)] text-[var(--color-tint-sand-ink)]",
@@ -21,11 +30,15 @@ const PIPELINE_LABEL = {
   },
 };
 
+const KINDS: ClientKind[] = ["SPSTI", "Autonome", "Service de santé", "Autre"];
+
 export default function Page() {
   const clients = useStore((s) => s.clients);
   const centres = useStore((s) => s.centres);
   const activities = useStore((s) => s.activities);
   const users = useStore((s) => s.users);
+  const createClient = useStore((s) => s.createClient);
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <>
@@ -35,6 +48,8 @@ export default function Page() {
         subtitle="Liste des clients · drill-in vers leurs centres et leurs activités."
         showFilters={false}
         actionLabel="Ajouter un client"
+        actionIcon={<Plus size={13} strokeWidth={1.8} />}
+        onAction={() => setModalOpen(true)}
       />
       <div className="px-8 py-6">
         <ul className="grid gap-3 md:grid-cols-2">
@@ -104,7 +119,7 @@ export default function Page() {
                     · {acts.length} activités
                   </span>
                   <Link
-                    href={`/clients/centres?client=${c.id}`}
+                    href={`/clients/centres`}
                     className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--color-ink-2)] hover:text-[var(--color-accent)]"
                   >
                     Centres
@@ -116,7 +131,200 @@ export default function Page() {
           })}
         </ul>
       </div>
+
+      {modalOpen && (
+        <CreateClientModal
+          onClose={() => setModalOpen(false)}
+          onCreate={(c) => {
+            createClient(c);
+            setModalOpen(false);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function CreateClientModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (c: {
+    name: string;
+    kind: ClientKind;
+    pipeline: ClientPipeline;
+    dateDebut: string;
+    dateFin: string;
+    nbSalaries: number;
+    dateBascule?: string;
+    nbSemainesDeploiement?: number;
+    estFormateurs?: number;
+    estAccompagnateurs?: number;
+    estJoursFormation?: number;
+    estJoursAccomp?: number;
+    confidence?: number;
+  }) => void;
+}) {
+  const [name, setName] = useState("");
+  const [kind, setKind] = useState<ClientKind>("SPSTI");
+  const [pipeline, setPipeline] = useState<ClientPipeline>("intent");
+  const [dateDebut, setDateDebut] = useState("");
+  const [dateFin, setDateFin] = useState("");
+  const [dateBascule, setDateBascule] = useState("");
+  const [nbSalaries, setNbSalaries] = useState(50000);
+  const [estFormateurs, setEstFormateurs] = useState(4);
+  const [estAccompagnateurs, setEstAccompagnateurs] = useState(8);
+  const [nbSemainesDeploiement, setNbSemaines] = useState(18);
+
+  const canSubmit = name && dateDebut && dateFin;
+
+  return (
+    <Modal
+      title="Nouveau client"
+      icon={<Building2 size={14} strokeWidth={1.8} className="text-[var(--color-accent)]" />}
+      onClose={onClose}
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-[var(--color-line)] bg-white px-3 py-1.5 text-[12px] font-medium text-[var(--color-ink-2)]"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={() =>
+              onCreate({
+                name,
+                kind,
+                pipeline,
+                dateDebut,
+                dateFin,
+                nbSalaries,
+                dateBascule: dateBascule || undefined,
+                nbSemainesDeploiement,
+                estFormateurs,
+                estAccompagnateurs,
+                estJoursFormation: Math.round(nbSalaries / 1000),
+                estJoursAccomp: Math.round(nbSalaries / 1000),
+                confidence:
+                  pipeline === "signed"
+                    ? 100
+                    : pipeline === "verbal"
+                      ? 75
+                      : pipeline === "intent"
+                        ? 50
+                        : 25,
+              })
+            }
+            className="rounded-md bg-[var(--color-ink)] px-3 py-1.5 text-[12px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Créer le client
+          </button>
+        </>
+      }
+    >
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Nom">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="ex : McDonald's France"
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Type">
+          <select
+            value={kind}
+            onChange={(e) => setKind(e.target.value as ClientKind)}
+            className={inputClass}
+          >
+            {KINDS.map((k) => (
+              <option key={k} value={k}>
+                {k}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Pipeline">
+          <select
+            value={pipeline}
+            onChange={(e) => setPipeline(e.target.value as ClientPipeline)}
+            className={inputClass}
+          >
+            <option value="suspect">Suspect</option>
+            <option value="intent">Ressenti</option>
+            <option value="verbal">Accord de principe</option>
+            <option value="signed">Signé</option>
+          </select>
+        </Field>
+        <Field label="Nb salariés suivis">
+          <input
+            type="number"
+            value={nbSalaries}
+            onChange={(e) => setNbSalaries(parseInt(e.target.value || "0", 10))}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Date début déploiement">
+          <input
+            type="date"
+            value={dateDebut}
+            onChange={(e) => setDateDebut(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Date fin déploiement">
+          <input
+            type="date"
+            value={dateFin}
+            onChange={(e) => setDateFin(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Date bascule (J0)" hint="Mardi recommandé">
+          <input
+            type="date"
+            value={dateBascule}
+            onChange={(e) => setDateBascule(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Durée déploiement (semaines)">
+          <input
+            type="number"
+            value={nbSemainesDeploiement}
+            onChange={(e) =>
+              setNbSemaines(parseInt(e.target.value || "0", 10))
+            }
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Formateurs estimés">
+          <input
+            type="number"
+            value={estFormateurs}
+            onChange={(e) =>
+              setEstFormateurs(parseInt(e.target.value || "0", 10))
+            }
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Accompagnateurs estimés">
+          <input
+            type="number"
+            value={estAccompagnateurs}
+            onChange={(e) =>
+              setEstAccompagnateurs(parseInt(e.target.value || "0", 10))
+            }
+            className={inputClass}
+          />
+        </Field>
+      </div>
+    </Modal>
   );
 }
 
