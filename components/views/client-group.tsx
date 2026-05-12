@@ -36,7 +36,7 @@ export function ClientGroup({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-4 border-b border-[var(--color-line)] bg-[linear-gradient(180deg,#fdfcf8_0%,#ffffff_100%)] px-5 py-3.5 text-left transition-colors hover:bg-[var(--color-line-2)]/30"
+        className="flex w-full items-center gap-4 border-b border-[var(--color-line)] bg-white px-5 py-3 text-left transition-colors hover:bg-[var(--color-line-2)]/40"
       >
         <ChevronRight
           size={14}
@@ -46,10 +46,10 @@ export function ClientGroup({
           }`}
         />
         <div className="flex min-w-0 flex-1 items-baseline gap-3">
-          <h2 className="text-[17px] font-medium tracking-tight text-[var(--color-ink)]">
+          <h2 className="text-[15px] font-semibold tracking-tight text-[var(--color-ink)]">
             {client.name}
           </h2>
-          <span className="font-serif-italic text-[15px] text-[var(--color-ink-3)]">
+          <span className="text-[11.5px] font-medium uppercase tracking-[0.08em] text-[var(--color-ink-3)]">
             {client.type}
           </span>
           <span className="hidden text-[11.5px] text-[var(--color-ink-3)] md:inline">

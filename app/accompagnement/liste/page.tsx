@@ -50,7 +50,6 @@ export default function Page() {
       <PageHeader
         breadcrumb={["Accompagnement", "Liste"]}
         title="Missions d'accompagnement"
-        serifTitle="terrain"
         subtitle={`${totalCount} missions à staffer · groupées par client puis par centre.`}
         actionLabel="Ajouter une mission"
         right={
@@ -70,9 +69,9 @@ export default function Page() {
 
       <div className="space-y-8 px-8 py-6">
         {grouped.length === 0 ? (
-          <div className="paper-dots rounded-xl border border-dashed border-[var(--color-line)] bg-white/40 py-16 text-center">
-            <p className="font-serif-italic text-[20px] text-[var(--color-ink-2)]">
-              Rien à afficher
+          <div className="rounded-xl border border-[var(--color-line)] bg-white px-6 py-12 text-center">
+            <p className="text-[13.5px] font-semibold text-[var(--color-ink)]">
+              Aucune mission
             </p>
             <p className="mt-1 text-[12.5px] text-[var(--color-ink-3)]">
               Aucune mission ne correspond à votre recherche.

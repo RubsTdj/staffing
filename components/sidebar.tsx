@@ -111,13 +111,8 @@ export function Sidebar() {
             P
             <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-white/90" />
           </span>
-          <span className="flex flex-col leading-none">
-            <span className="text-[14px] font-semibold tracking-tight text-[var(--color-rail-text-hi)]">
-              Popsgo
-            </span>
-            <span className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--color-rail-text)]/70">
-              Operating workspace
-            </span>
+          <span className="text-[14.5px] font-semibold tracking-tight text-[var(--color-rail-text-hi)]">
+            Popsgo
           </span>
         </Link>
       </div>

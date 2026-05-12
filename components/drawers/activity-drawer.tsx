@@ -79,9 +79,10 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
             <span className="text-[var(--color-line)]">·</span>
             <span className="font-mono text-[10.5px]">#{activity.id.toUpperCase()}</span>
           </div>
-          <h2 className="mt-1 flex items-baseline gap-2 text-[20px] font-medium tracking-tight">
+          <h2 className="mt-1 flex items-baseline gap-2 text-[17px] font-semibold tracking-tight">
             <span>{client?.name}</span>
-            <span className="font-serif-italic text-[var(--color-accent)]">
+            <span className="text-[var(--color-ink-3)] font-normal">·</span>
+            <span className="text-[var(--color-ink-2)] font-medium">
               {centre?.name}
             </span>
           </h2>
