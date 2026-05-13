@@ -1,48 +1,48 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Canvas — deeper paper to give cards real lift */
-  --color-paper: #efece4;
+  /* Canvas — outil métier, très clair, contraste fort */
+  --color-paper: #fafafa;
   --color-surface: #ffffff;
-  --color-surface-2: #fbfaf5;
-  --color-ink: #14110f;
-  --color-ink-2: #3a3633;
-  --color-ink-3: #6b6660;
-  --color-muted: #8a857f;
-  --color-line: #e3ddd2;
-  --color-line-2: #ece8de;
-  --shadow-card: 0 1px 0 rgba(20, 17, 15, 0.04), 0 1px 2px rgba(20, 17, 15, 0.04);
-  --shadow-card-hover: 0 1px 0 rgba(20, 17, 15, 0.04),
-    0 8px 24px -12px rgba(20, 17, 15, 0.18);
+  --color-surface-2: #f4f4f5;
+  --color-ink: #09090b;
+  --color-ink-2: #27272a;
+  --color-ink-3: #52525b;
+  --color-muted: #71717a;
+  --color-line: #e4e4e7;
+  --color-line-2: #f4f4f5;
+  --shadow-card: 0 1px 2px rgba(9, 9, 11, 0.04), 0 1px 1px rgba(9, 9, 11, 0.03);
+  --shadow-card-hover: 0 2px 4px rgba(9, 9, 11, 0.06),
+    0 8px 24px -12px rgba(9, 9, 11, 0.14);
 
-  /* Sidebar (anthracite, NOT navy) */
-  --color-rail: #0e0e10;
+  /* Sidebar (anthracite profond, Linear-like) */
+  --color-rail: #09090b;
   --color-rail-2: #18181b;
-  --color-rail-line: #232325;
-  --color-rail-text: #9a978f;
-  --color-rail-text-hi: #f5f3ee;
-  --color-rail-active: #1e1e21;
+  --color-rail-line: #27272a;
+  --color-rail-text: #a1a1aa;
+  --color-rail-text-hi: #fafafa;
+  --color-rail-active: #27272a;
 
-  /* Signature accent — terracotta */
-  --color-accent: #c8553d;
-  --color-accent-2: #a8412c;
-  --color-accent-soft: #f5e1da;
+  /* Accent signature — bleu électrique */
+  --color-accent: #3b82f6;
+  --color-accent-2: #2563eb;
+  --color-accent-soft: #dbeafe;
 
-  /* Status palette — bumped for visual punch */
-  --color-status-todo: #a8a39a;
-  --color-status-partial: #e89f1d;
-  --color-status-done: #2e9a4d;
-  --color-status-alert: #d62b1f;
+  /* Status — saturés et nets */
+  --color-status-todo: #a1a1aa;
+  --color-status-partial: #f59e0b;
+  --color-status-done: #10b981;
+  --color-status-alert: #ef4444;
 
-  /* Category tints — slightly more saturated for readability */
-  --color-tint-pink: #fcdfdb;
-  --color-tint-pink-ink: #7a2e1f;
-  --color-tint-sand: #f7e4be;
-  --color-tint-sand-ink: #6e4c10;
-  --color-tint-sage: #d6e6d1;
-  --color-tint-sage-ink: #2f4f33;
-  --color-tint-mist: #d8e2eb;
-  --color-tint-mist-ink: #2f4256;
+  /* Category tints — neutres tirés vers couleur */
+  --color-tint-pink: #fce7e6;
+  --color-tint-pink-ink: #9f1239;
+  --color-tint-sand: #fef3c7;
+  --color-tint-sand-ink: #92400e;
+  --color-tint-sage: #d1fae5;
+  --color-tint-sage-ink: #065f46;
+  --color-tint-mist: #dbeafe;
+  --color-tint-mist-ink: #1e40af;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -54,12 +54,42 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: "ss01", "cv11";
+  font-synthesis-weight: none;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
+/* Reduce default font size for outil-métier density */
+body {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.018em;
+}
+
 .hairline {
   border-color: var(--color-line);
+}
+
+/* Card surface used everywhere */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  box-shadow: var(--shadow-card);
+}
+
+/* Table density */
+table.dense th,
+table.dense td {
+  padding-block: 6px;
+  padding-inline: 10px;
 }
 
 @keyframes drawer-in {
@@ -93,12 +123,19 @@ body {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(20, 17, 15, 0.12);
+  background: rgba(9, 9, 11, 0.12);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(20, 17, 15, 0.22);
+  background: rgba(9, 9, 11, 0.22);
   background-clip: padding-box;
+}
+
+/* Focus ring uniforme */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

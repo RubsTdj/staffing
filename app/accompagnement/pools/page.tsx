@@ -38,7 +38,9 @@ export default function Page() {
   const upsertPoolEntry = useStore((s) => s.upsertPoolEntry);
 
   const isCoordinator =
-    roleView === "manager-deployment" || roleView === "admin";
+    roleView === "manager" ||
+    roleView === "admin" ||
+    roleView === "super-admin";
 
   const [addingFor, setAddingFor] = useState<string | null>(null);
 

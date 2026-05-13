@@ -196,10 +196,9 @@ export interface Comment {
   createdAt: string;
 }
 
-// Pour la simulation de rôle dans l'app
-export type RoleView =
-  | "manager-formation"
-  | "manager-deployment"
-  | "ops"
-  | "logistique"
-  | "admin";
+// Vue / persona simulé dans l'app
+// - super-admin : full power, seul à pouvoir impersonner et accéder aux paramètres
+// - admin       : voit tout, toutes équipes, toutes actions métier
+// - manager     : voit son équipe + le pool global, créer/assigner/valider
+// - collaborateur : voit son propre planning, accepte/refuse, déclare dispo
+export type RoleView = "super-admin" | "admin" | "manager" | "collaborateur";
