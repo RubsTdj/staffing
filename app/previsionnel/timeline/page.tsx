@@ -28,15 +28,15 @@ import {
 //  Constants
 // ============================================================
 const WEEK_MS = 7 * 86400000;
-const WEEKS_VISIBLE = 78; // ~ 18 mois — l'utilisateur scroll horizontalement
-const COL_CLIENT_W = 150;
-const COL_EXTOOL_W = 110;
-const COL_SIZE_W = 96;
+const WEEKS_VISIBLE = 156; // ~ 3 ans, on scroll horizontalement
+const COL_CLIENT_W = 140;
+const COL_EXTOOL_W = 100;
+const COL_SIZE_W = 84;
 const COL_FIXED_W = COL_CLIENT_W + COL_EXTOOL_W + COL_SIZE_W;
-const CELL_W = 32;     // 38% plus petit qu'avant — densité Sheet
-const CELL_H = 24;
-const ROW_H = CELL_H + 14; // marge haut pour la bande de drag
-const HEADER_H = 86;   // 38 dates + 24 zones vacances + 24 jours fériés
+const CELL_W = 26;     // Densité Excel/Sheet
+const CELL_H = 22;
+const ROW_H = CELL_H + 12; // marge haut pour la bande de drag
+const HEADER_H = 102;  // mois + jour + 3 zones vacances + jours fériés
 
 // ============================================================
 //  Visuel
@@ -271,38 +271,46 @@ export default function Page() {
         title="Timeline déploiement"
         subtitle="Choisis un outil dans la palette, peins les semaines. Glisse le bloc d'une vague pour le décaler entier. Tire les bords pour l'allonger."
         showFilters={false}
-        actionLabel="Nouvelle vague"
+        actionLabel="Nouveau client"
         actionIcon={<Plus size={14} strokeWidth={2.2} />}
         onAction={() => setCreating(true)}
         right={
           <div className="flex items-center gap-1 rounded-md border border-[var(--color-line)] bg-white p-0.5">
-            <button
-              type="button"
-              onClick={() => setOffsetWeeks((v) => v - 8)}
-              className="rounded-[5px] px-1.5 py-1 text-[12px] hover:bg-[var(--color-line-2)]"
-              title="−8 semaines"
-            >
-              <ChevronLeft size={12} strokeWidth={2} />
-            </button>
+            <NavButton onClick={() => setOffsetWeeks((v) => v - 52)} title="−1 an">
+              «
+            </NavButton>
+            <NavButton onClick={() => setOffsetWeeks((v) => v - 13)} title="−3 mois">
+              ‹‹
+            </NavButton>
+            <NavButton onClick={() => setOffsetWeeks((v) => v - 4)} title="−1 mois">
+              ‹
+            </NavButton>
+            <NavButton onClick={() => setOffsetWeeks((v) => v - 1)} title="−1 semaine">
+              <ChevronLeft size={11} strokeWidth={2} />
+            </NavButton>
             <button
               type="button"
               onClick={() => setOffsetWeeks(-2)}
-              className={`rounded-[5px] px-2 py-1 text-[12px] font-medium ${
+              className={`rounded-[5px] px-2 py-1 text-[11.5px] font-medium ${
                 offsetWeeks === -2
                   ? "bg-[var(--color-ink)] text-white"
                   : "text-[var(--color-ink-2)] hover:bg-[var(--color-line-2)]"
               }`}
             >
-              Aujourd'hui
+              Auj.
             </button>
-            <button
-              type="button"
-              onClick={() => setOffsetWeeks((v) => v + 8)}
-              className="rounded-[5px] px-1.5 py-1 text-[12px] hover:bg-[var(--color-line-2)]"
-              title="+8 semaines"
-            >
-              <ChevronRight size={12} strokeWidth={2} />
-            </button>
+            <NavButton onClick={() => setOffsetWeeks((v) => v + 1)} title="+1 semaine">
+              <ChevronRight size={11} strokeWidth={2} />
+            </NavButton>
+            <NavButton onClick={() => setOffsetWeeks((v) => v + 4)} title="+1 mois">
+              ›
+            </NavButton>
+            <NavButton onClick={() => setOffsetWeeks((v) => v + 13)} title="+3 mois">
+              ››
+            </NavButton>
+            <NavButton onClick={() => setOffsetWeeks((v) => v + 52)} title="+1 an">
+              »
+            </NavButton>
           </div>
         }
       />
@@ -318,7 +326,7 @@ export default function Page() {
               <div className="px-6 py-10 text-center">
                 <p className="text-[13px] font-semibold">Aucune vague</p>
                 <p className="mt-1 text-[12px] text-[var(--color-ink-3)]">
-                  Crée la première avec « Nouvelle vague » en haut à droite.
+                  Crée le premier avec « Nouveau client » en haut à droite.
                 </p>
               </div>
             ) : (
@@ -366,6 +374,30 @@ export default function Page() {
         <CreateWaveModal clients={clients} onClose={() => setCreating(false)} />
       )}
     </>
+  );
+}
+
+// ============================================================
+//  NavButton — bouton compact de navigation temporelle
+// ============================================================
+function NavButton({
+  onClick,
+  title,
+  children,
+}: {
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className="rounded-[5px] px-1.5 py-1 text-[11px] font-mono font-semibold leading-none text-[var(--color-ink-2)] hover:bg-[var(--color-line-2)]"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -592,10 +624,49 @@ function WeekHeader({ viewStart, today }: { viewStart: Date; today: Date }) {
     };
   });
 
+  // Pré-calcul des bandes "Mois" pour montrer le mois en bandeau sur plusieurs cellules
+  const monthBands: { startIdx: number; span: number; label: string; year: number }[] = [];
+  weeks.forEach((w, i) => {
+    const last = monthBands[monthBands.length - 1];
+    const monthKey = `${w.date.getFullYear()}-${w.date.getMonth()}`;
+    const lastKey = last ? `${last.year}-${new Date(weeks[last.startIdx].date).getMonth()}` : null;
+    if (lastKey === monthKey) {
+      last.span += 1;
+    } else {
+      monthBands.push({
+        startIdx: i,
+        span: 1,
+        label: w.date.toLocaleDateString("fr-FR", { month: "short" }),
+        year: w.date.getFullYear(),
+      });
+    }
+  });
+
   return (
-    <div className="border-b border-[#9a9a9a] bg-white">
-      {/* Ligne 1 — labels colonnes + dates */}
-      <div className="flex" style={{ height: 38 }}>
+    <div className="sticky top-0 z-20 border-b border-[#9a9a9a] bg-white">
+      {/* Ligne 0 — bandeau Mois Année (tout au-dessus, large) */}
+      <div className="flex" style={{ height: 22 }}>
+        <div
+          className="flex items-center border-r border-[#9a9a9a] bg-[#e8e8e8] px-2 text-[10px] font-bold uppercase tracking-wider text-[#222]"
+          style={{ width: COL_FIXED_W }}
+        >
+          Période
+        </div>
+        {monthBands.map((b, i) => (
+          <div
+            key={i}
+            className={`flex items-center justify-center border-r border-[#9a9a9a] text-[10.5px] font-bold uppercase tracking-wider ${
+              i % 2 === 0 ? "bg-[#eaeaea] text-[#222]" : "bg-[#f2f2f2] text-[#333]"
+            }`}
+            style={{ width: b.span * CELL_W }}
+          >
+            {b.label} {b.year !== weeks[0].date.getFullYear() || i === 0 ? `'${String(b.year).slice(2)}` : ""}
+          </div>
+        ))}
+      </div>
+
+      {/* Ligne 1 — labels colonnes + JOUR du lundi */}
+      <div className="flex" style={{ height: 32 }}>
         <div
           className="flex items-center border-r border-[#9a9a9a] bg-[#f2f2f2] px-2 text-[11px] font-bold uppercase text-[#222]"
           style={{ width: COL_CLIENT_W }}
@@ -606,7 +677,7 @@ function WeekHeader({ viewStart, today }: { viewStart: Date; today: Date }) {
           className="flex items-center border-r border-[#9a9a9a] bg-[#f2f2f2] px-2 text-[11px] font-bold uppercase text-[#222]"
           style={{ width: COL_EXTOOL_W }}
         >
-          ex-outil
+          Outil utilisé
         </div>
         <div
           className="flex items-center justify-end border-r border-[#9a9a9a] bg-[#f2f2f2] px-2 text-[11px] font-bold uppercase text-[#222]"
@@ -618,12 +689,10 @@ function WeekHeader({ viewStart, today }: { viewStart: Date; today: Date }) {
         {weeks.map((w, i) => (
           <div
             key={i}
-            className={`flex flex-col items-center justify-center border-r border-[#9a9a9a] text-[10.5px] font-bold tabular-nums ${
+            className={`flex items-center justify-center border-r border-[#9a9a9a] text-[10.5px] font-bold tabular-nums ${
               w.isCurrent
                 ? "bg-[#fff2cc] text-[#7f6000]"
-                : w.isFirstOfMonth
-                  ? "bg-[#e8e8e8] text-[#222]"
-                  : "bg-[#f2f2f2] text-[#222]"
+                : "bg-[#f2f2f2] text-[#222]"
             }`}
             style={{ width: CELL_W }}
             title={w.date.toLocaleDateString("fr-FR", {
@@ -632,15 +701,7 @@ function WeekHeader({ viewStart, today }: { viewStart: Date; today: Date }) {
               year: "numeric",
             })}
           >
-            {w.isFirstOfMonth && (
-              <span className="text-[8.5px] uppercase tracking-wider text-[#555]">
-                {w.date.toLocaleDateString("fr-FR", { month: "short" })}
-              </span>
-            )}
-            <span>
-              {String(w.date.getDate()).padStart(2, "0")}/
-              {String(w.date.getMonth() + 1).padStart(2, "0")}
-            </span>
+            {String(w.date.getDate()).padStart(2, "0")}
           </div>
         ))}
       </div>
@@ -856,11 +917,11 @@ function WaveRow({
         </button>
       </div>
 
-      {/* Colonne ex-outil */}
+      {/* Colonne Outil utilisé (que le client utilise aujourd'hui et qu'on remplace) */}
       <div
         className="flex items-center border-r border-[#9a9a9a] bg-white px-2 text-[11.5px] italic text-[#666]"
         style={{ width: COL_EXTOOL_W }}
-        title="Ancien outil utilisé par ce client"
+        title="Outil actuellement utilisé par le client (qu'on remplace par le nôtre)"
       >
         <span className="truncate">{client.exTool ?? "—"}</span>
       </div>
@@ -1113,36 +1174,39 @@ function HeadcountModal({
 // L'utilisatrice répond à 5 questions simples ; on génère le pattern
 // (pré-déploiement / KO / formation / accompagnement) tout seul.
 
+// Ordre temporel d'un projet client (validé par utilisateur) :
+//   KO → S1 → S2 → … → S(deployWeeks) → F × formationWeeks → A × accompWeeks
+// Le projet démarre PAR le kick-off, pas avant.
 interface WizardParams {
-  preWeeks: number;          // semaines de préparation avant KO
-  formationWeeks: number;    // semaines de formation après KO
-  formationHc: number;       // nb personnes par jour pendant la formation
-  accompWeeks: number;       // semaines d'accompagnement après formation
-  accompHc: number;          // nb personnes par jour pendant l'accomp
+  deployWeeks: number;       // semaines de déploiement APRÈS le KO (S1, S2, …)
+  formationWeeks: number;    // semaines de formation à la fin du déploiement
+  formationHc: number;       // nb personnes / jour pendant la formation
+  accompWeeks: number;       // semaines d'accompagnement à la toute fin
+  accompHc: number;          // nb personnes / jour pendant l'accompagnement
 }
 
 const PRESETS: Record<string, { label: string; hint: string; params: WizardParams }> = {
   small: {
     label: "Petit déploiement",
     hint: "~ 8 semaines · pour un client de quelques centaines de salariés",
-    params: { preWeeks: 2, formationWeeks: 2, formationHc: 6, accompWeeks: 4, accompHc: 8 },
+    params: { deployWeeks: 2, formationWeeks: 2, formationHc: 6, accompWeeks: 3, accompHc: 8 },
   },
   medium: {
     label: "Déploiement moyen",
     hint: "~ 16 semaines · entre 10K et 100K salariés",
-    params: { preWeeks: 4, formationWeeks: 3, formationHc: 8, accompWeeks: 8, accompHc: 12 },
+    params: { deployWeeks: 5, formationWeeks: 3, formationHc: 8, accompWeeks: 7, accompHc: 12 },
   },
   big: {
     label: "Grand déploiement",
     hint: "~ 26 semaines · plus de 100K salariés, plusieurs vagues d'accomp",
-    params: { preWeeks: 6, formationWeeks: 4, formationHc: 10, accompWeeks: 14, accompHc: 18 },
+    params: { deployWeeks: 8, formationWeeks: 4, formationHc: 10, accompWeeks: 13, accompHc: 18 },
   },
 };
 
 function buildCells(p: WizardParams): WaveCell[] {
-  const cells: WaveCell[] = [];
-  for (let i = 0; i < p.preWeeks; i++) cells.push({ kind: "deploy" });
-  cells.push({ kind: "ko" });
+  // Ordre temporel : KO puis déploiement puis formation puis accompagnement
+  const cells: WaveCell[] = [{ kind: "ko" }];
+  for (let i = 0; i < p.deployWeeks; i++) cells.push({ kind: "deploy" });
   for (let i = 0; i < p.formationWeeks; i++) {
     cells.push({ kind: "formation", headcount: p.formationHc });
   }
@@ -1177,12 +1241,11 @@ function CreateWaveModal({
     setParams(PRESETS[key].params);
   };
 
-  // Le premier lundi = koDate - preWeeks * 7j (snap au lundi)
+  // Le projet démarre PAR le KO → startMonday = lundi du KO
   const startMonday = useMemo(() => {
     const d = startOfWeekMonday(new Date(koDate));
-    d.setDate(d.getDate() - params.preWeeks * 7);
     return isoDate(d);
-  }, [koDate, params.preWeeks]);
+  }, [koDate]);
 
   const cells = useMemo(() => buildCells(params), [params]);
   const totalWeeks = cells.length;
@@ -1203,7 +1266,7 @@ function CreateWaveModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-[#9a9a9a] bg-[#f2f2f2] px-4 py-2">
-          <h3 className="text-[14px] font-semibold">Nouvelle vague de déploiement</h3>
+          <h3 className="text-[14px] font-semibold">Nouveau client — feuille de route</h3>
           <button
             type="button"
             onClick={onClose}
@@ -1235,7 +1298,7 @@ function CreateWaveModal({
 
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#444]">
-                2. Date de la bascule (J0)
+                2. Date du kick-off
               </label>
               <input
                 type="date"
@@ -1244,7 +1307,8 @@ function CreateWaveModal({
                 className="mt-1 w-full rounded-sm border border-[#9a9a9a] bg-white px-2 py-1.5 text-[13px] outline-none focus:border-[#5b9bd5]"
               />
               <p className="mt-1 text-[10.5px] text-[#666]">
-                C'est le lundi du KO. La phase de préparation se positionne en amont.
+                Lundi du KO. Le projet démarre par cette semaine, puis les
+                semaines S1, S2… se succèdent.
               </p>
             </div>
 
@@ -1284,10 +1348,10 @@ function CreateWaveModal({
               </label>
               <div className="mt-1 space-y-1.5 rounded-sm border border-[#ccc] bg-[#fafafa] p-2">
                 <ParamRow
-                  label="Préparation avant KO"
-                  value={params.preWeeks}
+                  label="Déploiement après KO"
+                  value={params.deployWeeks}
                   unit="sem"
-                  onChange={(v) => setParams({ ...params, preWeeks: v })}
+                  onChange={(v) => setParams({ ...params, deployWeeks: v })}
                 />
                 <ParamRow
                   label="Formation"
