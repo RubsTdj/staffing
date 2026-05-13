@@ -75,6 +75,7 @@ export interface Client {
   name: string;
   kind: ClientKind;
   pipeline: ClientPipeline;
+  exTool?: string;                // ancien outil utilisé par le client (pour la timeline)
   dateDebut: string;
   dateFin: string;
   nbSalaries: number;

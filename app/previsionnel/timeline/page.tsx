@@ -28,15 +28,15 @@ import {
 //  Constants
 // ============================================================
 const WEEK_MS = 7 * 86400000;
-const WEEKS_VISIBLE = 28;
-const COL_CLIENT_W = 160;
-const COL_SIZE_W = 60;
-const COL_DATE_W = 84;
-const COL_FIXED_W = COL_CLIENT_W + COL_SIZE_W + COL_DATE_W;
-const CELL_W = 52;
-const CELL_H = 32;
-const ROW_H = CELL_H + 18; // marge haut pour le drag handle
-const HEADER_H = 38;
+const WEEKS_VISIBLE = 78; // ~ 18 mois — l'utilisateur scroll horizontalement
+const COL_CLIENT_W = 150;
+const COL_EXTOOL_W = 110;
+const COL_SIZE_W = 96;
+const COL_FIXED_W = COL_CLIENT_W + COL_EXTOOL_W + COL_SIZE_W;
+const CELL_W = 32;     // 38% plus petit qu'avant — densité Sheet
+const CELL_H = 24;
+const ROW_H = CELL_H + 14; // marge haut pour la bande de drag
+const HEADER_H = 86;   // 38 dates + 24 zones vacances + 24 jours fériés
 
 // ============================================================
 //  Visuel
@@ -84,15 +84,100 @@ function weekIndexFromDate(viewStart: Date, date: Date): number {
 function sLabel(idx: number): string {
   return `S${String(idx + 1).padStart(2, "0")}`;
 }
-function isVacationWeek(d: Date): boolean {
-  const m = d.getMonth();
-  const dayNum = d.getDate();
-  if (m === 11 && dayNum >= 19) return true; // Noël
-  if (m === 9 && dayNum >= 25) return true; // Toussaint
-  if (m === 10 && dayNum <= 7) return true;
-  if (m === 1 && dayNum >= 14 && dayNum <= 28) return true; // Février
-  if (m === 3 && dayNum >= 11 && dayNum <= 25) return true; // Pâques
-  return false;
+// ============================================================
+//  Vacances scolaires France (zones A / B / C) + jours fériés
+// ============================================================
+// Plages officielles 2025-2027 (dates de samedi début → dimanche fin)
+interface DateRange { start: string; end: string }
+interface VacationDef { A: DateRange[]; B: DateRange[]; C: DateRange[] }
+
+const VACATIONS: VacationDef = {
+  // Académies regroupées en zone — calendrier officiel
+  A: [
+    // 2025-26
+    { start: "2025-10-18", end: "2025-11-02" }, // Toussaint
+    { start: "2025-12-20", end: "2026-01-04" }, // Noël
+    { start: "2026-02-07", end: "2026-02-22" }, // Hiver A
+    { start: "2026-04-04", end: "2026-04-19" }, // Printemps A
+    { start: "2026-07-04", end: "2026-08-31" }, // Été
+    // 2026-27
+    { start: "2026-10-17", end: "2026-11-02" }, // Toussaint
+    { start: "2026-12-19", end: "2027-01-03" }, // Noël
+    { start: "2027-02-06", end: "2027-02-22" }, // Hiver A
+    { start: "2027-04-03", end: "2027-04-19" }, // Printemps A
+  ],
+  B: [
+    { start: "2025-10-18", end: "2025-11-02" },
+    { start: "2025-12-20", end: "2026-01-04" },
+    { start: "2026-02-21", end: "2026-03-08" }, // Hiver B
+    { start: "2026-04-18", end: "2026-05-03" }, // Printemps B
+    { start: "2026-07-04", end: "2026-08-31" },
+    { start: "2026-10-17", end: "2026-11-02" },
+    { start: "2026-12-19", end: "2027-01-03" },
+    { start: "2027-02-20", end: "2027-03-08" },
+    { start: "2027-04-17", end: "2027-05-03" },
+  ],
+  C: [
+    { start: "2025-10-18", end: "2025-11-02" },
+    { start: "2025-12-20", end: "2026-01-04" },
+    { start: "2026-02-14", end: "2026-03-01" }, // Hiver C
+    { start: "2026-04-11", end: "2026-04-26" }, // Printemps C
+    { start: "2026-07-04", end: "2026-08-31" },
+    { start: "2026-10-17", end: "2026-11-02" },
+    { start: "2026-12-19", end: "2027-01-03" },
+    { start: "2027-02-13", end: "2027-03-01" },
+    { start: "2027-04-10", end: "2027-04-26" },
+  ],
+};
+
+function weekInRange(weekStart: Date, range: DateRange): boolean {
+  const weekEnd = new Date(weekStart.getTime() + 6 * 86400000);
+  const s = new Date(range.start);
+  const e = new Date(range.end);
+  return weekStart <= e && weekEnd >= s;
+}
+
+function vacationZonesForWeek(weekStart: Date): { A: boolean; B: boolean; C: boolean } {
+  return {
+    A: VACATIONS.A.some((r) => weekInRange(weekStart, r)),
+    B: VACATIONS.B.some((r) => weekInRange(weekStart, r)),
+    C: VACATIONS.C.some((r) => weekInRange(weekStart, r)),
+  };
+}
+
+// Jours fériés FR (calculés simplement pour 2025-2027)
+const FIXED_HOLIDAYS: { md: string; label: string }[] = [
+  { md: "01-01", label: "Jour de l'An" },
+  { md: "05-01", label: "Fête du Travail" },
+  { md: "05-08", label: "Victoire 1945" },
+  { md: "07-14", label: "Fête nationale" },
+  { md: "08-15", label: "Assomption" },
+  { md: "11-01", label: "Toussaint" },
+  { md: "11-11", label: "Armistice" },
+  { md: "12-25", label: "Noël" },
+];
+// Lundi de Pâques + Ascension + Pentecôte (pré-calculé)
+const MOVING_HOLIDAYS: { iso: string; label: string }[] = [
+  { iso: "2026-04-06", label: "Lundi de Pâques" },
+  { iso: "2026-05-14", label: "Ascension" },
+  { iso: "2026-05-25", label: "Lundi de Pentecôte" },
+  { iso: "2027-03-29", label: "Lundi de Pâques" },
+  { iso: "2027-05-06", label: "Ascension" },
+  { iso: "2027-05-17", label: "Lundi de Pentecôte" },
+];
+
+function holidaysInWeek(weekStart: Date): { date: Date; label: string }[] {
+  const res: { date: Date; label: string }[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart.getTime() + i * 86400000);
+    const md = `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const iso = `${d.getFullYear()}-${md}`;
+    const fixed = FIXED_HOLIDAYS.find((h) => h.md === md);
+    if (fixed) res.push({ date: d, label: fixed.label });
+    const moving = MOVING_HOLIDAYS.find((h) => h.iso === iso);
+    if (moving) res.push({ date: d, label: moving.label });
+  }
+  return res;
 }
 
 // ============================================================
@@ -138,19 +223,44 @@ export default function Page() {
   // Drag-paint en cours sur une vague
   const paintingRef = useRef<{ waveId: string } | null>(null);
 
+  // Esc → retour en mode sélection (sortie d'urgence si l'utilisateur
+  // s'est trompé d'outil ou n'identifie plus le mode actif)
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape" && tool.kind !== "select") {
+        setTool({ kind: "select" });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tool.kind]);
+
   const applyTool = (waveId: string, cellIdx: number) => {
     if (tool.kind === "select") return;
+    const wave = waves.find((w) => w.id === waveId);
+    const current = wave?.cells[cellIdx];
+
     if (tool.kind === "erase") {
+      if (!current) return; // no-op si déjà vide
       setCell(waveId, cellIdx, null);
       return;
     }
     if (tool.kind === "formation" || tool.kind === "accompagnement") {
+      // no-op si même kind ET même headcount → évite les écrasements involontaires
+      if (
+        current &&
+        current.kind === tool.kind &&
+        current.headcount === tool.headcount
+      ) {
+        return;
+      }
       setCell(waveId, cellIdx, {
         kind: tool.kind,
         headcount: tool.headcount,
       });
       return;
     }
+    if (current && current.kind === tool.kind) return; // no-op
     setCell(waveId, cellIdx, { kind: tool.kind });
   };
 
@@ -394,9 +504,40 @@ function Toolbar({
         border
       />
 
-      <div className="ml-auto text-[11px] text-[var(--color-ink-3)]">
-        Astuce : sélectionne un outil puis <strong>clic ou drag</strong> sur les semaines pour les peindre.
-      </div>
+      {/* Bandeau MODE ACTIF — bien visible pour éviter les fausses manips */}
+      {tool.kind !== "select" ? (
+        <div
+          className="ml-auto flex items-center gap-2 rounded-md px-2.5 py-1 text-[11.5px] font-semibold"
+          style={{
+            background: KIND_BG[tool.kind === "erase" ? "pause" : tool.kind],
+            color: KIND_INK[tool.kind === "erase" ? "pause" : tool.kind],
+          }}
+        >
+          <span>
+            Mode actif :{" "}
+            {tool.kind === "deploy" && "Déploiement"}
+            {tool.kind === "ko" && "Kick-off"}
+            {tool.kind === "formation" && `Formation · ${tool.headcount} p/j`}
+            {tool.kind === "accompagnement" &&
+              `Accompagnement · ${tool.headcount} p/j`}
+            {tool.kind === "pause" && "Pause"}
+            {tool.kind === "erase" && "Effacement"}
+          </span>
+          <button
+            type="button"
+            onClick={() => setTool({ kind: "select" })}
+            className="rounded-sm border border-current/40 bg-white/20 px-1.5 py-px text-[10.5px] font-bold hover:bg-white/40"
+            title="Quitter le mode (raccourci : Échap)"
+          >
+            ESC ✕
+          </button>
+        </div>
+      ) : (
+        <div className="ml-auto text-[11px] text-[var(--color-ink-3)]">
+          Astuce : clique un outil puis <strong>clic ou drag</strong> sur les
+          semaines. <kbd className="rounded border border-[#ccc] bg-white px-1">Échap</kbd> pour quitter le mode.
+        </div>
+      )}
     </div>
   );
 }
@@ -439,56 +580,141 @@ function ToolButton({
 //  WeekHeader
 // ============================================================
 function WeekHeader({ viewStart, today }: { viewStart: Date; today: Date }) {
+  // Pré-calcul des semaines avec leur métadonnées vacances/fériés
+  const weeks = Array.from({ length: WEEKS_VISIBLE }).map((_, i) => {
+    const wk = new Date(viewStart.getTime() + i * WEEK_MS);
+    return {
+      date: wk,
+      zones: vacationZonesForWeek(wk),
+      holidays: holidaysInWeek(wk),
+      isCurrent: wk <= today && today < new Date(wk.getTime() + WEEK_MS),
+      isFirstOfMonth: wk.getDate() <= 7,
+    };
+  });
+
   return (
-    <div
-      className="flex border-b border-[#9a9a9a] bg-white"
-      style={{ height: HEADER_H }}
-    >
-      <div
-        className="flex items-center border-r border-[#9a9a9a] bg-[#f2f2f2] px-2 text-[11px] font-bold uppercase text-[#222]"
-        style={{ width: COL_CLIENT_W }}
-      >
-        ex-outil
-      </div>
-      <div
-        className="flex items-center justify-end border-r border-[#9a9a9a] bg-[#f2f2f2] px-2 text-[11px] font-bold uppercase text-[#222]"
-        style={{ width: COL_SIZE_W }}
-      >
-        taille
-      </div>
-      <div
-        className="flex items-center border-r border-[#9a9a9a] bg-[#f2f2f2] px-2 text-[11px] font-bold uppercase text-[#222]"
-        style={{ width: COL_DATE_W }}
-      >
-        date dépl
-      </div>
-      {Array.from({ length: WEEKS_VISIBLE }).map((_, i) => {
-        const wk = new Date(viewStart.getTime() + i * WEEK_MS);
-        const vacation = isVacationWeek(wk);
-        const isCurrent =
-          wk <= today && today < new Date(wk.getTime() + WEEK_MS);
-        return (
+    <div className="border-b border-[#9a9a9a] bg-white">
+      {/* Ligne 1 — labels colonnes + dates */}
+      <div className="flex" style={{ height: 38 }}>
+        <div
+          className="flex items-center border-r border-[#9a9a9a] bg-[#f2f2f2] px-2 text-[11px] font-bold uppercase text-[#222]"
+          style={{ width: COL_CLIENT_W }}
+        >
+          Client
+        </div>
+        <div
+          className="flex items-center border-r border-[#9a9a9a] bg-[#f2f2f2] px-2 text-[11px] font-bold uppercase text-[#222]"
+          style={{ width: COL_EXTOOL_W }}
+        >
+          ex-outil
+        </div>
+        <div
+          className="flex items-center justify-end border-r border-[#9a9a9a] bg-[#f2f2f2] px-2 text-[11px] font-bold uppercase text-[#222]"
+          style={{ width: COL_SIZE_W }}
+          title="Nombre de salariés suivis chez ce client"
+        >
+          Nb salariés
+        </div>
+        {weeks.map((w, i) => (
           <div
             key={i}
-            className={`flex items-center justify-center border-r border-[#9a9a9a] text-[12px] font-bold ${
-              vacation
-                ? "bg-[#c00000] text-white"
-                : isCurrent
-                  ? "bg-[#fff2cc] text-[#7f6000]"
+            className={`flex flex-col items-center justify-center border-r border-[#9a9a9a] text-[10.5px] font-bold tabular-nums ${
+              w.isCurrent
+                ? "bg-[#fff2cc] text-[#7f6000]"
+                : w.isFirstOfMonth
+                  ? "bg-[#e8e8e8] text-[#222]"
                   : "bg-[#f2f2f2] text-[#222]"
             }`}
             style={{ width: CELL_W }}
-            title={wk.toLocaleDateString("fr-FR", {
+            title={w.date.toLocaleDateString("fr-FR", {
               day: "2-digit",
               month: "long",
               year: "numeric",
             })}
           >
-            {String(wk.getDate()).padStart(2, "0")}/
-            {String(wk.getMonth() + 1).padStart(2, "0")}
+            {w.isFirstOfMonth && (
+              <span className="text-[8.5px] uppercase tracking-wider text-[#555]">
+                {w.date.toLocaleDateString("fr-FR", { month: "short" })}
+              </span>
+            )}
+            <span>
+              {String(w.date.getDate()).padStart(2, "0")}/
+              {String(w.date.getMonth() + 1).padStart(2, "0")}
+            </span>
           </div>
-        );
-      })}
+        ))}
+      </div>
+
+      {/* Ligne 2 — zones de vacances A/B/C (3 mini-bandes) */}
+      <div className="flex" style={{ height: 24 }}>
+        <div
+          className="flex items-center justify-end border-r border-[#9a9a9a] bg-[#f9f9f9] px-2 text-[10px] font-semibold uppercase tracking-wider text-[#666]"
+          style={{ width: COL_FIXED_W }}
+          title="Vacances scolaires par zone (calendrier officiel)"
+        >
+          Vac. zones
+        </div>
+        <div className="flex flex-col" style={{ flex: 1 }}>
+          {(["A", "B", "C"] as const).map((zone) => (
+            <div
+              key={zone}
+              className="flex"
+              style={{ height: 8 }}
+            >
+              {weeks.map((w, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-center border-r border-[#e5e5e5]"
+                  style={{
+                    width: CELL_W,
+                    background: w.zones[zone]
+                      ? zone === "A"
+                        ? "#c00000"
+                        : zone === "B"
+                          ? "#ed7d31"
+                          : "#7030a0"
+                      : "transparent",
+                  }}
+                  title={w.zones[zone] ? `Vacances zone ${zone}` : undefined}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Ligne 3 — jours fériés (point + tooltip) */}
+      <div className="flex" style={{ height: 24 }}>
+        <div
+          className="flex items-center justify-end border-r border-[#9a9a9a] bg-[#f9f9f9] px-2 text-[10px] font-semibold uppercase tracking-wider text-[#666]"
+          style={{ width: COL_FIXED_W }}
+        >
+          Jours fériés
+        </div>
+        {weeks.map((w, i) => (
+          <div
+            key={i}
+            className={`relative flex items-center justify-center border-r border-[#e5e5e5] ${
+              w.holidays.length ? "bg-[#fde7e9]" : "bg-white"
+            }`}
+            style={{ width: CELL_W }}
+            title={
+              w.holidays.length
+                ? w.holidays
+                    .map(
+                      (h) =>
+                        `${String(h.date.getDate()).padStart(2, "0")}/${String(h.date.getMonth() + 1).padStart(2, "0")} — ${h.label}`,
+                    )
+                    .join("\n")
+                : undefined
+            }
+          >
+            {w.holidays.length > 0 && (
+              <span className="inline-block h-2 w-2 rounded-full bg-[#c00000]" />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -612,12 +838,12 @@ function WaveRow({
       className="group relative flex border-b border-[#d0d0d0] last:border-b-0"
       style={{ height: ROW_H }}
     >
-      {/* Colonne client */}
+      {/* Colonne Client */}
       <div
         className="flex items-center gap-1 border-r border-[#9a9a9a] bg-[#fafafa] px-2"
         style={{ width: COL_CLIENT_W }}
       >
-        <span className="truncate text-[12.5px] font-medium text-[#222]">
+        <span className="truncate text-[12px] font-medium text-[#222]">
           {client.name}
         </span>
         <button
@@ -630,24 +856,22 @@ function WaveRow({
         </button>
       </div>
 
-      {/* Colonne taille */}
+      {/* Colonne ex-outil */}
       <div
-        className="flex items-center justify-end border-r border-[#9a9a9a] bg-white px-2 font-mono text-[11px] tabular-nums text-[#444]"
-        style={{ width: COL_SIZE_W }}
+        className="flex items-center border-r border-[#9a9a9a] bg-white px-2 text-[11.5px] italic text-[#666]"
+        style={{ width: COL_EXTOOL_W }}
+        title="Ancien outil utilisé par ce client"
       >
-        {client.nbSalaries >= 1000
-          ? `${Math.round(client.nbSalaries / 1000)}K`
-          : client.nbSalaries}
+        <span className="truncate">{client.exTool ?? "—"}</span>
       </div>
 
-      {/* Colonne date dépl */}
+      {/* Colonne Nb salariés suivis (date dépl en hint via title) */}
       <div
-        className="flex items-center border-r border-[#9a9a9a] bg-white px-2 font-mono text-[11px] tabular-nums text-[#444]"
-        style={{ width: COL_DATE_W }}
+        className="flex items-center justify-end border-r border-[#9a9a9a] bg-white px-2 font-mono text-[11px] tabular-nums text-[#333]"
+        style={{ width: COL_SIZE_W }}
+        title={`Bascule (J0) : ${String(deplDate.getDate()).padStart(2, "0")}/${String(deplDate.getMonth() + 1).padStart(2, "0")}/${String(deplDate.getFullYear()).slice(2)}`}
       >
-        {String(deplDate.getDate()).padStart(2, "0")}/
-        {String(deplDate.getMonth() + 1).padStart(2, "0")}/
-        {String(deplDate.getFullYear()).slice(2)}
+        {client.nbSalaries.toLocaleString("fr-FR")}
       </div>
 
       {/* Grid empty cells (background) */}
