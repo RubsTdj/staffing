@@ -3,11 +3,13 @@ import type {
   Centre,
   Client,
   Comment,
+  DeploymentWave,
   ObserverRequest,
   PoolEntry,
   Quarter,
   ResourceAlert,
   User,
+  WaveCell,
 } from "./types";
 
 export const CURRENT_QUARTER: Quarter = "2026-Q2";
@@ -634,3 +636,87 @@ export const OBSERVER_TEAMS = [
   "Finance",
   "Autre",
 ] as const;
+
+// ============================================================
+//  Vagues de déploiement (timeline prévisionnel)
+// ============================================================
+
+// Helper : génère une séquence de cellules.
+// `pattern` = array de tokens lus dans l'ordre :
+//   "S"   → déploiement actif (bleu, S01… auto-numéroté)
+//   "KO"  → kick-off
+//   "F:n" → formation rose clair avec n personnes
+//   "A:n" → accompagnement rose foncé avec n personnes
+//   "_"   → pause (gris)
+function wave(
+  id: string,
+  clientId: string,
+  startMonday: string,
+  pattern: string[],
+  note?: string,
+): DeploymentWave {
+  const cells: WaveCell[] = pattern.map((tok) => {
+    if (tok === "KO") return { kind: "ko" };
+    if (tok === "_") return { kind: "pause" };
+    if (tok === "S") return { kind: "deploy" };
+    if (tok.startsWith("F:")) {
+      return { kind: "formation", headcount: Number(tok.slice(2)) };
+    }
+    if (tok.startsWith("A:")) {
+      return { kind: "accompagnement", headcount: Number(tok.slice(2)) };
+    }
+    return { kind: "deploy" };
+  });
+  return { id, clientId, startMonday, cells, note };
+}
+
+export const initialWaves: DeploymentWave[] = [
+  // McDonald's France — déjà en cours
+  wave(
+    "w1",
+    "c1",
+    "2026-03-30",
+    [
+      "S", "S", "S", "S", "S", "S", "KO",
+      "F:8", "F:8", "_", "_",
+      "A:20", "A:18", "A:15", "A:12", "A:10", "A:8",
+    ],
+    "Déplt lundi 19/05 (mardi habituel décalé jour férié)",
+  ),
+  // Uber EMEA — démarre bientôt
+  wave(
+    "w2",
+    "c2",
+    "2026-04-27",
+    [
+      "S", "S", "S", "S", "S", "S", "S", "KO",
+      "F:6", "F:6", "F:14",
+      "A:12", "A:10", "A:8", "A:6", "A:4",
+    ],
+    "Avec un observateur OPS sur semaine 3",
+  ),
+  // Apple Retail — pipeline verbal, plus tard
+  wave(
+    "w3",
+    "c3",
+    "2026-09-07",
+    [
+      "S", "S", "S", "S", "S",
+      "KO",
+      "F:4", "F:4", "_",
+      "A:8", "A:8", "A:8", "A:6", "A:6", "A:4",
+    ],
+  ),
+  // Hermès Production — intent
+  wave(
+    "w4",
+    "c4",
+    "2026-10-12",
+    [
+      "S", "S", "S",
+      "KO",
+      "F:6", "F:6", "F:6",
+      "A:12", "A:10", "A:8",
+    ],
+  ),
+];
