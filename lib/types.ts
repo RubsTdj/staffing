@@ -141,6 +141,34 @@ export interface FeedbackTicket {
 
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
 
+// ============================================================
+//  Timeline prévisionnel — vagues de déploiement
+// ============================================================
+
+// Une "vague" est une ligne du planning prévisionnel (1 client peut en avoir N).
+// La grille hebdo affiche une cellule par semaine, typée :
+export type WaveCellKind =
+  | "deploy"          // bleu — semaine de déploiement actif (auto S01, S02…)
+  | "ko"              // bleu foncé — kick-off (1 par vague)
+  | "formation"       // rose clair — pic de formation (avec headcount)
+  | "accompagnement"  // rose foncé — pic d'accompagnement (avec headcount)
+  | "pause";          // gris — vacances / arrêt
+
+export interface WaveCell {
+  kind: WaveCellKind;
+  headcount?: number; // nb de personnes mobilisées (formation/accompagnement uniquement)
+}
+
+export interface DeploymentWave {
+  id: string;
+  clientId: string;
+  // Lundi de la 1ère colonne où la vague existe (= lundi de la 1ère cellule remplie)
+  startMonday: string; // ISO date d'un lundi
+  cells: WaveCell[];   // length = nb de semaines à partir de startMonday
+  note?: string;       // annotation libre en marge droite
+}
+
+
 export interface PoolEntry {
   id: string;
   userId: string;

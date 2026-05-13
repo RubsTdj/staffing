@@ -9,6 +9,7 @@ import type {
   Centre,
   Client,
   Comment,
+  DeploymentWave,
   FeedbackTicket,
   ObserverRequest,
   ObserverRequestStatus,
@@ -20,6 +21,7 @@ import type {
   StaffingStatusKind,
   User,
   ValidationKind,
+  WaveCell,
 } from "./types";
 import {
   CURRENT_QUARTER,
@@ -31,6 +33,7 @@ import {
   initialPoolEntries,
   initialResourceAlerts,
   initialUsers,
+  initialWaves,
 } from "./mock-data";
 
 type DrawerKind =
@@ -50,6 +53,15 @@ interface State {
   resourceAlerts: ResourceAlert[];
   comments: Comment[];
   tickets: FeedbackTicket[];
+  waves: DeploymentWave[];
+
+  // Vagues (timeline prévisionnel)
+  moveWave: (waveId: string, deltaWeeks: number) => void;
+  setWaveCell: (waveId: string, weekIndex: number, cell: WaveCell | null) => void;
+  setWaveNote: (waveId: string, note: string) => void;
+  resizeWave: (waveId: string, newLength: number) => void;
+  createWave: (clientId: string, startMonday: string) => string;
+  deleteWave: (waveId: string) => void;
 
   currentUserId: string;
   roleView: RoleView;
@@ -196,6 +208,7 @@ export const useStore = create<State>()(
   resourceAlerts: initialResourceAlerts,
   comments: initialComments,
   tickets: [],
+  waves: initialWaves,
 
   currentUserId: "u10",
   roleView: "super-admin",
@@ -520,6 +533,83 @@ export const useStore = create<State>()(
         },
       ],
     })),
+
+  moveWave: (waveId, deltaWeeks) =>
+    set((state) => ({
+      waves: state.waves.map((w) => {
+        if (w.id !== waveId) return w;
+        const d = new Date(w.startMonday);
+        d.setDate(d.getDate() + deltaWeeks * 7);
+        return { ...w, startMonday: d.toISOString().slice(0, 10) };
+      }),
+    })),
+
+  setWaveCell: (waveId, weekIndex, cell) =>
+    set((state) => ({
+      waves: state.waves.map((w) => {
+        if (w.id !== waveId) return w;
+        const cells = [...w.cells];
+        if (cell === null) {
+          // Suppression : tronque la fin si on supprime la dernière, sinon remplace par pause
+          if (weekIndex === cells.length - 1) cells.pop();
+          else cells[weekIndex] = { kind: "pause" };
+        } else {
+          // Extend with pauses if writing beyond current length
+          while (cells.length <= weekIndex) cells.push({ kind: "pause" });
+          cells[weekIndex] = cell;
+        }
+        return { ...w, cells };
+      }),
+    })),
+
+  setWaveNote: (waveId, note) =>
+    set((state) => ({
+      waves: state.waves.map((w) =>
+        w.id === waveId ? { ...w, note } : w,
+      ),
+    })),
+
+  resizeWave: (waveId, newLength) =>
+    set((state) => ({
+      waves: state.waves.map((w) => {
+        if (w.id !== waveId) return w;
+        const cells = [...w.cells];
+        if (newLength > cells.length) {
+          while (cells.length < newLength) cells.push({ kind: "deploy" });
+        } else {
+          cells.length = Math.max(1, newLength);
+        }
+        return { ...w, cells };
+      }),
+    })),
+
+  createWave: (clientId, startMonday) => {
+    const id = `w${Date.now().toString(36)}`;
+    set((state) => ({
+      waves: [
+        ...state.waves,
+        {
+          id,
+          clientId,
+          startMonday,
+          cells: [
+            { kind: "deploy" },
+            { kind: "deploy" },
+            { kind: "ko" },
+            { kind: "deploy" },
+            { kind: "deploy" },
+            { kind: "deploy" },
+          ],
+        },
+      ],
+    }));
+    return id;
+  },
+
+  deleteWave: (waveId) =>
+    set((state) => ({
+      waves: state.waves.filter((w) => w.id !== waveId),
+    })),
 }),
     {
       name: "popsgo-staffing-v2",
@@ -543,6 +633,7 @@ export function resetStoreToMocks() {
     resourceAlerts: initialResourceAlerts,
     comments: initialComments,
     tickets: [],
+    waves: initialWaves,
   });
 }
 
