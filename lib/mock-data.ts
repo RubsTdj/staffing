@@ -695,11 +695,11 @@ export const initialWaves: DeploymentWave[] = [
     ],
     "Avec un observateur OPS sur semaine 3",
   ),
-  // Apple Retail — pipeline verbal, plus tard
+  // Apple Retail — démarre en juin
   wave(
     "w3",
     "c3",
-    "2026-09-07",
+    "2026-05-25",
     [
       "S", "S", "S", "S", "S",
       "KO",
@@ -707,11 +707,11 @@ export const initialWaves: DeploymentWave[] = [
       "A:8", "A:8", "A:8", "A:6", "A:6", "A:4",
     ],
   ),
-  // Hermès Production — intent
+  // Hermès Production — démarre en juillet
   wave(
     "w4",
     "c4",
-    "2026-10-12",
+    "2026-06-15",
     [
       "S", "S", "S",
       "KO",
