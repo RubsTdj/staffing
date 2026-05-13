@@ -31,8 +31,10 @@ export function ActivityDrawer({ activityId }: { activityId: string }) {
   const users = useStore((s) => s.users);
   const clients = useStore((s) => s.clients);
   const centres = useStore((s) => s.centres);
-  const comments = useStore((s) =>
-    s.comments.filter((c) => c.activityId === activityId),
+  const allComments = useStore((s) => s.comments);
+  const comments = useMemo(
+    () => allComments.filter((c) => c.activityId === activityId),
+    [allComments, activityId],
   );
   const assignUser = useStore((s) => s.assignUser);
   const unassignUser = useStore((s) => s.unassignUser);
