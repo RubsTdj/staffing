@@ -31,8 +31,8 @@ const NAV: NavItem[] = [
   { id: "today", label: "Aujourd'hui", href: "/", Icon: Home },
   {
     id: "previsionnel",
-    label: "Prévisionnel",
-    href: "/previsionnel/pipeline",
+    label: "Timeline déploiement",
+    href: "/previsionnel/timeline",
     Icon: Compass,
   },
   { id: "clients", label: "Clients", href: "/clients", Icon: Building2 },
