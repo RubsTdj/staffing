@@ -118,7 +118,6 @@ export default function Page() {
   const moveWave = useStore((s) => s.moveWave);
   const setCell = useStore((s) => s.setWaveCell);
   const resizeWave = useStore((s) => s.resizeWave);
-  const createWave = useStore((s) => s.createWave);
   const deleteWave = useStore((s) => s.deleteWave);
 
   const [offsetWeeks, setOffsetWeeks] = useState(-2);
@@ -254,14 +253,7 @@ export default function Page() {
       )}
 
       {creating && (
-        <CreateWaveModal
-          clients={clients}
-          onClose={() => setCreating(false)}
-          onCreate={(clientId, monday) => {
-            createWave(clientId, monday);
-            setCreating(false);
-          }}
-        />
+        <CreateWaveModal clients={clients} onClose={() => setCreating(false)} />
       )}
     </>
   );
@@ -892,28 +884,102 @@ function HeadcountModal({
 }
 
 // ============================================================
-//  CreateWaveModal
+//  CreateWaveModal — wizard auto-rempli (mâche le travail)
 // ============================================================
+// L'utilisatrice répond à 5 questions simples ; on génère le pattern
+// (pré-déploiement / KO / formation / accompagnement) tout seul.
+
+interface WizardParams {
+  preWeeks: number;          // semaines de préparation avant KO
+  formationWeeks: number;    // semaines de formation après KO
+  formationHc: number;       // nb personnes par jour pendant la formation
+  accompWeeks: number;       // semaines d'accompagnement après formation
+  accompHc: number;          // nb personnes par jour pendant l'accomp
+}
+
+const PRESETS: Record<string, { label: string; hint: string; params: WizardParams }> = {
+  small: {
+    label: "Petit déploiement",
+    hint: "~ 8 semaines · pour un client de quelques centaines de salariés",
+    params: { preWeeks: 2, formationWeeks: 2, formationHc: 6, accompWeeks: 4, accompHc: 8 },
+  },
+  medium: {
+    label: "Déploiement moyen",
+    hint: "~ 16 semaines · entre 10K et 100K salariés",
+    params: { preWeeks: 4, formationWeeks: 3, formationHc: 8, accompWeeks: 8, accompHc: 12 },
+  },
+  big: {
+    label: "Grand déploiement",
+    hint: "~ 26 semaines · plus de 100K salariés, plusieurs vagues d'accomp",
+    params: { preWeeks: 6, formationWeeks: 4, formationHc: 10, accompWeeks: 14, accompHc: 18 },
+  },
+};
+
+function buildCells(p: WizardParams): WaveCell[] {
+  const cells: WaveCell[] = [];
+  for (let i = 0; i < p.preWeeks; i++) cells.push({ kind: "deploy" });
+  cells.push({ kind: "ko" });
+  for (let i = 0; i < p.formationWeeks; i++) {
+    cells.push({ kind: "formation", headcount: p.formationHc });
+  }
+  for (let i = 0; i < p.accompWeeks; i++) {
+    cells.push({ kind: "accompagnement", headcount: p.accompHc });
+  }
+  return cells;
+}
+
 function CreateWaveModal({
   clients,
   onClose,
-  onCreate,
 }: {
   clients: Client[];
   onClose: () => void;
-  onCreate: (clientId: string, startMonday: string) => void;
 }) {
+  const createWaveWithCells = useStore((s) => s.createWaveWithCells);
+
   const [clientId, setClientId] = useState(clients[0]?.id ?? "");
-  const [date, setDate] = useState(() => {
+  // Date KO (J0 de la bascule) — bcp plus intuitif que "premier lundi"
+  const [koDate, setKoDate] = useState(() => {
     const d = startOfWeekMonday(new Date("2026-05-12"));
+    d.setDate(d.getDate() + 7 * 4); // ~ 1 mois plus tard par défaut
     return isoDate(d);
   });
 
+  const [presetKey, setPresetKey] = useState<keyof typeof PRESETS>("medium");
+  const [params, setParams] = useState<WizardParams>(PRESETS.medium.params);
+
+  const applyPreset = (key: keyof typeof PRESETS) => {
+    setPresetKey(key);
+    setParams(PRESETS[key].params);
+  };
+
+  // Le premier lundi = koDate - preWeeks * 7j (snap au lundi)
+  const startMonday = useMemo(() => {
+    const d = startOfWeekMonday(new Date(koDate));
+    d.setDate(d.getDate() - params.preWeeks * 7);
+    return isoDate(d);
+  }, [koDate, params.preWeeks]);
+
+  const cells = useMemo(() => buildCells(params), [params]);
+  const totalWeeks = cells.length;
+
+  const submit = () => {
+    if (!clientId || !koDate) return;
+    createWaveWithCells(clientId, startMonday, cells);
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-ink)]/40 p-4">
-      <div className="w-full max-w-md rounded-md border border-[#9a9a9a] bg-white shadow-[var(--shadow-pop)]">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-ink)]/40 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl rounded-md border border-[#9a9a9a] bg-white shadow-[var(--shadow-pop)]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between border-b border-[#9a9a9a] bg-[#f2f2f2] px-4 py-2">
-          <h3 className="text-[13px] font-semibold">Nouvelle vague</h3>
+          <h3 className="text-[14px] font-semibold">Nouvelle vague de déploiement</h3>
           <button
             type="button"
             onClick={onClose}
@@ -922,56 +988,194 @@ function CreateWaveModal({
             <X size={12} strokeWidth={2} />
           </button>
         </div>
-        <div className="space-y-3 px-4 py-3">
-          <div>
-            <label className="block text-[10.5px] font-semibold uppercase tracking-wider text-[#666]">
-              Client
-            </label>
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="mt-1 w-full rounded-sm border border-[#9a9a9a] bg-white px-2 py-1 text-[12.5px] outline-none"
-            >
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+
+        <div className="grid gap-4 px-5 py-4 md:grid-cols-2">
+          {/* Colonne 1 : client + date KO + preset */}
+          <div className="space-y-3">
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#444]">
+                1. Client
+              </label>
+              <select
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                className="mt-1 w-full rounded-sm border border-[#9a9a9a] bg-white px-2 py-1.5 text-[13px] outline-none focus:border-[#5b9bd5]"
+              >
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({Math.round(c.nbSalaries / 1000)}K)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#444]">
+                2. Date de la bascule (J0)
+              </label>
+              <input
+                type="date"
+                value={koDate}
+                onChange={(e) => setKoDate(e.target.value)}
+                className="mt-1 w-full rounded-sm border border-[#9a9a9a] bg-white px-2 py-1.5 text-[13px] outline-none focus:border-[#5b9bd5]"
+              />
+              <p className="mt-1 text-[10.5px] text-[#666]">
+                C'est le lundi du KO. La phase de préparation se positionne en amont.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#444]">
+                3. Taille du déploiement
+              </label>
+              <div className="mt-1 grid grid-cols-1 gap-1">
+                {(Object.keys(PRESETS) as (keyof typeof PRESETS)[]).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => applyPreset(k)}
+                    className={`rounded-sm border px-2 py-1.5 text-left ${
+                      presetKey === k
+                        ? "border-[#1f4e79] bg-[#eaf2fb]"
+                        : "border-[#ccc] bg-white hover:bg-[#f6f6f6]"
+                    }`}
+                  >
+                    <div className="text-[12.5px] font-semibold text-[#222]">
+                      {PRESETS[k].label}
+                    </div>
+                    <div className="text-[10.5px] text-[#666]">
+                      {PRESETS[k].hint}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-[10.5px] font-semibold uppercase tracking-wider text-[#666]">
-              Premier lundi
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="mt-1 w-full rounded-sm border border-[#9a9a9a] bg-white px-2 py-1 text-[12.5px] outline-none"
-            />
+
+          {/* Colonne 2 : ajustements fins + preview */}
+          <div className="space-y-3">
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#444]">
+                4. Affine si besoin
+              </label>
+              <div className="mt-1 space-y-1.5 rounded-sm border border-[#ccc] bg-[#fafafa] p-2">
+                <ParamRow
+                  label="Préparation avant KO"
+                  value={params.preWeeks}
+                  unit="sem"
+                  onChange={(v) => setParams({ ...params, preWeeks: v })}
+                />
+                <ParamRow
+                  label="Formation"
+                  value={params.formationWeeks}
+                  unit="sem"
+                  onChange={(v) => setParams({ ...params, formationWeeks: v })}
+                />
+                <ParamRow
+                  label="Nb pers. formation"
+                  value={params.formationHc}
+                  unit="p/j"
+                  onChange={(v) => setParams({ ...params, formationHc: v })}
+                />
+                <ParamRow
+                  label="Accompagnement"
+                  value={params.accompWeeks}
+                  unit="sem"
+                  onChange={(v) => setParams({ ...params, accompWeeks: v })}
+                />
+                <ParamRow
+                  label="Nb pers. accomp."
+                  value={params.accompHc}
+                  unit="p/j"
+                  onChange={(v) => setParams({ ...params, accompHc: v })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#444]">
+                5. Aperçu ({totalWeeks} semaines)
+              </label>
+              <div className="mt-1 flex flex-wrap gap-px rounded-sm border border-[#ccc] bg-white p-1">
+                {cells.map((cell, i) => (
+                  <span
+                    key={i}
+                    className="flex h-7 min-w-[28px] items-center justify-center px-1 text-[10.5px] font-bold tabular-nums"
+                    style={{
+                      background: KIND_BG[cell.kind],
+                      color: KIND_INK[cell.kind],
+                    }}
+                    title={KIND_LABEL[cell.kind]}
+                  >
+                    {cell.kind === "ko"
+                      ? "KO"
+                      : cell.kind === "deploy"
+                        ? `S${String(i + 1).padStart(2, "0")}`
+                        : cell.headcount}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-1 text-[10.5px] text-[#666]">
+                Tu pourras encore ajuster cellule par cellule après création.
+              </p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-[#9a9a9a] bg-[#fafafa] px-4 py-2">
+
+        <div className="flex items-center justify-end gap-2 border-t border-[#9a9a9a] bg-[#fafafa] px-4 py-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-sm border border-[#9a9a9a] bg-white px-3 py-1 text-[11.5px] font-medium"
+            className="rounded-sm border border-[#9a9a9a] bg-white px-3 py-1.5 text-[12px] font-medium"
           >
             Annuler
           </button>
           <button
             type="button"
-            disabled={!clientId || !date}
-            onClick={() => {
-              const d = startOfWeekMonday(new Date(date));
-              onCreate(clientId, isoDate(d));
-            }}
-            className="rounded-sm bg-[#5b9bd5] px-3 py-1 text-[11.5px] font-semibold text-white hover:bg-[#1f4e79] disabled:opacity-40"
+            disabled={!clientId || !koDate}
+            onClick={submit}
+            className="rounded-sm bg-[#1f4e79] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#0f2e4f] disabled:opacity-40"
           >
-            Créer
+            Créer la vague
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ParamRow({
+  label,
+  value,
+  unit,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  unit: string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex-1 text-[12px] text-[#333]">{label}</span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, value - 1))}
+        className="h-6 w-6 rounded-sm border border-[#ccc] bg-white text-[11px] font-bold hover:bg-[#eaf2fb]"
+      >
+        −
+      </button>
+      <span className="w-9 text-center text-[12.5px] font-semibold tabular-nums">
+        {value}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChange(value + 1)}
+        className="h-6 w-6 rounded-sm border border-[#ccc] bg-white text-[11px] font-bold hover:bg-[#eaf2fb]"
+      >
+        +
+      </button>
+      <span className="w-9 text-[10.5px] text-[#666]">{unit}</span>
     </div>
   );
 }

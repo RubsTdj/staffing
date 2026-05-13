@@ -61,6 +61,12 @@ interface State {
   setWaveNote: (waveId: string, note: string) => void;
   resizeWave: (waveId: string, newLength: number) => void;
   createWave: (clientId: string, startMonday: string) => string;
+  createWaveWithCells: (
+    clientId: string,
+    startMonday: string,
+    cells: WaveCell[],
+    note?: string,
+  ) => string;
   deleteWave: (waveId: string) => void;
 
   currentUserId: string;
@@ -601,6 +607,17 @@ export const useStore = create<State>()(
             { kind: "deploy" },
           ],
         },
+      ],
+    }));
+    return id;
+  },
+
+  createWaveWithCells: (clientId, startMonday, cells, note) => {
+    const id = `w${Date.now().toString(36)}`;
+    set((state) => ({
+      waves: [
+        ...state.waves,
+        { id, clientId, startMonday, cells, note },
       ],
     }));
     return id;
