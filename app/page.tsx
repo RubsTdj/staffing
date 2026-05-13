@@ -38,11 +38,14 @@ export default function Page() {
   const openDrawer = useStore((s) => s.openDrawer);
   const currentUser = users.find((u) => u.id === currentUserId);
 
-  const isOps = roleView === "ops";
-  const isLogistique = roleView === "logistique";
-  const isManagerDep = roleView === "manager-deployment";
-  const isManagerFormation = roleView === "manager-formation";
-  const isAdmin = roleView === "admin";
+  const isCollab = roleView === "collaborateur";
+  const isLogistique = currentUser?.role === "Logistique";
+  const isManager = roleView === "manager";
+  const isAdmin = roleView === "admin" || roleView === "super-admin";
+  // Backward-compat alias for branches that previously had per-flavor managers
+  const isManagerDep = isManager && currentUser?.team === "Déploiement";
+  const isManagerFormation = isManager && currentUser?.team === "Formation";
+  const isOps = isCollab;
 
   const myActivities = activities
     .filter((a) => getAssigneeIds(a).includes(currentUserId))
@@ -303,7 +306,7 @@ export default function Page() {
           </>
         )}
 
-        {cancelCount > 0 && (isManagerDep || isAdmin) && (
+        {cancelCount > 0 && (isManager || isAdmin) && (
           <section className="rounded-xl border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
             <div className="flex items-center justify-between gap-2">
               <div>

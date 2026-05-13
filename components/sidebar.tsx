@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import {
   BarChart3,
   Building2,
-  Check,
-  ChevronDown,
   Compass,
+  FlaskConical,
   GraduationCap,
   Home,
   Inbox,
@@ -71,14 +69,19 @@ const NAV: NavItem[] = [
     href: "/mon-espace",
     Icon: UserCircle,
   },
+  {
+    id: "test",
+    label: "Scénarios test",
+    href: "/test",
+    Icon: FlaskConical,
+  },
 ];
 
 const ROLE_LABEL: Record<RoleView, string> = {
+  "super-admin": "Super Admin",
   admin: "Admin",
-  "manager-formation": "Manager Formation",
-  "manager-deployment": "Manager Déploiement",
-  ops: "OPS terrain",
-  logistique: "Logistique",
+  manager: "Manager",
+  collaborateur: "Collaborateur",
 };
 
 export function Sidebar() {
@@ -97,7 +100,8 @@ export function Sidebar() {
   const inboxBadge = newObsCount + cancelCount;
 
   const accessibleNav = NAV.filter((s) => canAccess(roleView, s.id));
-  const [roleOpen, setRoleOpen] = useState(false);
+  // role switcher moved to ImpersonationBanner; keep setter unused here
+  void setRoleView;
 
   return (
     <aside className="hidden md:flex h-dvh w-[224px] shrink-0 flex-col bg-[var(--color-rail)] text-[var(--color-rail-text)]">
@@ -171,13 +175,9 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Footer — user + role */}
+      {/* Footer — user + role (lecture seule, switch via le bandeau Persona test) */}
       <div className="border-t border-[var(--color-rail-line)] px-3 py-2.5">
-        <button
-          type="button"
-          onClick={() => setRoleOpen(!roleOpen)}
-          className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left hover:bg-white/5"
-        >
+        <div className="flex w-full items-center gap-2 px-1 py-1">
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#e8d9c8] to-[#c8a587] text-[11px] font-semibold text-[var(--color-ink)]">
             {currentUser?.initials ?? "?"}
           </span>
@@ -189,41 +189,7 @@ export function Sidebar() {
               {ROLE_LABEL[roleView]}
             </div>
           </div>
-          <ChevronDown
-            size={12}
-            strokeWidth={2}
-            className={`text-[var(--color-rail-text)]/60 transition-transform ${
-              roleOpen ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-        {roleOpen && (
-          <ul className="mt-1.5 flex flex-col gap-0.5 rounded-md bg-[var(--color-rail-2)] p-1">
-            {(Object.entries(ROLE_LABEL) as [RoleView, string][]).map(
-              ([role, label]) => (
-                <li key={role}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRoleView(role);
-                      setRoleOpen(false);
-                    }}
-                    className={`flex w-full items-center justify-between rounded px-2 py-1 text-[11.5px] transition-colors ${
-                      role === roleView
-                        ? "text-[var(--color-rail-text-hi)]"
-                        : "text-[var(--color-rail-text)] hover:text-[var(--color-rail-text-hi)]"
-                    }`}
-                  >
-                    <span>{label}</span>
-                    {role === roleView && (
-                      <Check size={11} strokeWidth={2.2} />
-                    )}
-                  </button>
-                </li>
-              ),
-            )}
-          </ul>
-        )}
+        </div>
       </div>
     </aside>
   );

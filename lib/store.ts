@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type {
   Activity,
   ActivityState,
@@ -183,7 +184,9 @@ function recomputeStatus(
   return "partial";
 }
 
-export const useStore = create<State>((set) => ({
+export const useStore = create<State>()(
+  persist(
+    (set) => ({
   users: initialUsers,
   clients: initialClients,
   centres: initialCentres,
@@ -194,8 +197,8 @@ export const useStore = create<State>((set) => ({
   comments: initialComments,
   tickets: [],
 
-  currentUserId: "u1",
-  roleView: "manager-deployment",
+  currentUserId: "u10",
+  roleView: "super-admin",
   activeQuarter: CURRENT_QUARTER,
 
   drawer: null,
@@ -517,12 +520,37 @@ export const useStore = create<State>((set) => ({
         },
       ],
     })),
-}));
+}),
+    {
+      name: "popsgo-staffing-v2",
+      version: 2,
+      storage: createJSONStorage(() => localStorage),
+      // Reset to fresh mocks if structure changes between versions
+      migrate: () => undefined,
+    },
+  ),
+);
 
-// Permissions
+// Reset client-side state to the bundled mocks. Used by the dev test page.
+export function resetStoreToMocks() {
+  useStore.setState({
+    users: initialUsers,
+    clients: initialClients,
+    centres: initialCentres,
+    activities: initialActivities,
+    pool: initialPoolEntries,
+    observerRequests: initialObserverRequests,
+    resourceAlerts: initialResourceAlerts,
+    comments: initialComments,
+    tickets: [],
+  });
+}
+
+// Permissions de navigation par rôle simulé
 const ROLE_NAV_ACCESS: Record<RoleView, string[]> = {
+  "super-admin": ["*"],
   admin: ["*"],
-  "manager-deployment": [
+  manager: [
     "today",
     "previsionnel",
     "clients",
@@ -537,28 +565,26 @@ const ROLE_NAV_ACCESS: Record<RoleView, string[]> = {
     "mon-espace",
     "rapports",
     "stories",
+    "test",
   ],
-  "manager-formation": [
+  collaborateur: [
     "today",
-    "previsionnel",
-    "clients",
-    "centres",
-    "formations",
-    "formateurs",
-    "accompagnements",
-    "pools",
-    "equipe",
-    "inbox",
     "mon-espace",
-    "rapports",
-    "stories",
+    "inbox",
+    "test",
   ],
-  ops: ["today", "mon-espace", "inbox"],
-  logistique: ["today", "logistique", "inbox"],
 };
 
 export function canAccess(role: RoleView, nodeId: string): boolean {
   const list = ROLE_NAV_ACCESS[role];
   if (list.includes("*")) return true;
   return list.includes(nodeId);
+}
+
+// Capabilities — gates beyond navigation
+export function canImpersonate(role: RoleView): boolean {
+  return role === "super-admin";
+}
+export function canManageUsers(role: RoleView): boolean {
+  return role === "super-admin";
 }

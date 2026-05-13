@@ -35,7 +35,10 @@ export default function Page() {
   const observerRequests = useStore((s) => s.observerRequests);
   const addObserverRequest = useStore((s) => s.addObserverRequest);
   const setObserverStatus = useStore((s) => s.setObserverStatus);
-  const isCoordinator = roleView === "manager-deployment" || roleView === "admin";
+  const isCoordinator =
+    roleView === "manager" ||
+    roleView === "admin" ||
+    roleView === "super-admin";
 
   const [open, setOpen] = useState(false);
 
@@ -47,9 +50,9 @@ export default function Page() {
         subtitle="Seul un manager peut soumettre une demande pour un membre de son équipe."
         showFilters={false}
         actionLabel={
-          roleView === "manager-deployment" ||
-          roleView === "manager-formation" ||
-          roleView === "admin"
+          roleView === "manager" ||
+          roleView === "admin" ||
+          roleView === "super-admin"
             ? "Soumettre une demande"
             : undefined
         }

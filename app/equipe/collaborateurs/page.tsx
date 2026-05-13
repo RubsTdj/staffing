@@ -187,13 +187,9 @@ export default function Page() {
                           setRoleView(
                             u.role === "Admin"
                               ? "admin"
-                              : u.role === "Manager" && u.team === "Formation"
-                                ? "manager-formation"
-                                : u.role === "Manager"
-                                  ? "manager-deployment"
-                                  : u.role === "Logistique"
-                                    ? "logistique"
-                                    : "ops",
+                              : u.role === "Manager"
+                                ? "manager"
+                                : "collaborateur",
                           );
                         }}
                         className="rounded-md border border-[var(--color-line)] bg-white px-2 py-0.5 text-[11px] font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-line-2)]"
