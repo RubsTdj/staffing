@@ -115,14 +115,18 @@ export default function Page() {
 
 function ClientCardContent({ clientId }: { clientId: string }) {
   const client = useStore((s) => s.clients.find((c) => c.id === clientId))!;
-  const centres = useStore((s) =>
-    s.centres.filter((c) => c.clientId === clientId),
-  );
-  const activities = useStore((s) =>
-    s.activities.filter((a) => a.clientId === clientId),
-  );
+  const allCentres = useStore((s) => s.centres);
+  const allActivities = useStore((s) => s.activities);
   const cdp = useStore((s) =>
     s.users.find((u) => u.cdpFor?.includes(clientId)),
+  );
+  const centres = useMemo(
+    () => allCentres.filter((c) => c.clientId === clientId),
+    [allCentres, clientId],
+  );
+  const activities = useMemo(
+    () => allActivities.filter((a) => a.clientId === clientId),
+    [allActivities, clientId],
   );
   const pl = PIPELINE[client.pipeline];
   const formateurs = centres.filter((c) => c.isFormateur).length;
@@ -226,17 +230,29 @@ function ClientDetail({
   onBack: () => void;
 }) {
   const client = useStore((s) => s.clients.find((c) => c.id === clientId));
-  const centres = useStore((s) =>
-    s.centres.filter((c) => c.clientId === clientId),
-  );
-  const activities = useStore((s) =>
-    s.activities.filter((a) => a.clientId === clientId),
-  );
+  const allCentres = useStore((s) => s.centres);
+  const allActivities = useStore((s) => s.activities);
   const users = useStore((s) => s.users);
   const cdp = useStore((s) =>
     s.users.find((u) => u.cdpFor?.includes(clientId)),
   );
-  const pool = useStore((s) => s.pool.filter((p) => p.clientId === clientId));
+  const centres = useMemo(
+    () => allCentres.filter((c) => c.clientId === clientId),
+    [allCentres, clientId],
+  );
+  const activities = useMemo(
+    () => allActivities.filter((a) => a.clientId === clientId),
+    [allActivities, clientId],
+  );
+  // ⚠ Ne PAS faire `useStore((s) => s.pool.filter(...))` :
+  // ça retourne un nouvel array à chaque appel → Zustand v5 voit un changement
+  // référentiel à chaque render → boucle infinie → React #185.
+  // On récupère la référence stable et on filtre en dehors du selector.
+  const allPool = useStore((s) => s.pool);
+  const pool = useMemo(
+    () => allPool.filter((p) => p.clientId === clientId),
+    [allPool, clientId],
+  );
   const activeQuarter = useStore((s) => s.activeQuarter);
   const toggleF = useStore((s) => s.toggleCentreFormateur);
   const toggleE = useStore((s) => s.toggleCentreExterne);

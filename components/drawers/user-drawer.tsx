@@ -3,12 +3,15 @@
 import { getAssigneeIds, useStore } from "@/lib/store";
 import { Avatar } from "@/components/ui/avatar";
 import { X } from "lucide-react";
+import { useMemo } from "react";
 
 export function UserDrawer({ userId }: { userId: string }) {
   const close = useStore((s) => s.closeDrawer);
   const user = useStore((s) => s.users.find((u) => u.id === userId));
-  const activities = useStore((s) =>
-    s.activities.filter((a) => getAssigneeIds(a).includes(userId)),
+  const allActivities = useStore((s) => s.activities);
+  const activities = useMemo(
+    () => allActivities.filter((a) => getAssigneeIds(a).includes(userId)),
+    [allActivities, userId],
   );
   if (!user) return null;
 
