@@ -27,6 +27,7 @@ interface Persona {
   icon: typeof ShieldCheck;
   tagline: string;
   scenarios: Scenario[];
+  accent: string;
 }
 
 const PERSONAS: Persona[] = [
@@ -36,7 +37,8 @@ const PERSONAS: Persona[] = [
     userId: "u10",
     icon: Wrench,
     tagline:
-      "Toi. Tu peux switcher de persona (bandeau noir en haut), accéder à tout, et lancer ce qui suit.",
+      "Toi. Switcher de persona via le bandeau, accès aux paramètres et à la gestion des users.",
+    accent: "from-violet-600 to-violet-700",
     scenarios: [
       {
         title: "Vue d'ensemble — Aujourd'hui",
@@ -51,7 +53,10 @@ const PERSONAS: Persona[] = [
       },
       {
         title: "Gestion des collaborateurs",
-        steps: ["Lister tous les users", "Impersonner un user directement depuis la ligne"],
+        steps: [
+          "Lister tous les users",
+          "Impersonner un user depuis la ligne",
+        ],
         href: "/equipe/collaborateurs",
       },
     ],
@@ -62,10 +67,15 @@ const PERSONAS: Persona[] = [
     userId: "u10",
     icon: ShieldCheck,
     tagline: "Voit tout, peut tout faire sauf gérer les users et impersonner.",
+    accent: "from-blue-600 to-blue-700",
     scenarios: [
       {
         title: "Valider le staffing d'une activité",
-        steps: ["Ouvrir une mission à staffer", "Picker des formateurs", "Valider"],
+        steps: [
+          "Ouvrir une mission à staffer",
+          "Picker des formateurs",
+          "Valider",
+        ],
         href: "/accompagnement/liste",
       },
       {
@@ -86,7 +96,8 @@ const PERSONAS: Persona[] = [
     userId: "u1",
     icon: UserCog,
     tagline:
-      "Manager rattaché à une équipe (ici Formation). Switche via le bandeau pour tester un autre manager.",
+      "Manager rattaché à une équipe (ici Formation). Le bandeau te permet de switcher de manager.",
+    accent: "from-emerald-600 to-emerald-700",
     scenarios: [
       {
         title: "Timeline formateurs — drag & drop",
@@ -119,13 +130,11 @@ const PERSONAS: Persona[] = [
     userId: "u3",
     icon: UserRound,
     tagline: "Vue terrain : son planning, ses missions, ses dispos.",
+    accent: "from-amber-600 to-amber-700",
     scenarios: [
       {
         title: "Mon espace — mes missions",
-        steps: [
-          "Voir mes activités à venir",
-          "Déclarer une indisponibilité",
-        ],
+        steps: ["Voir mes activités à venir", "Déclarer une indisponibilité"],
         href: "/mon-espace",
       },
       {
@@ -153,7 +162,7 @@ export default function TestPage() {
       <PageHeader
         breadcrumb={["Scénarios test"]}
         title="Tester chaque parcours"
-        subtitle="Choisis un persona, puis suis le scénario. Tes actions sont persistées localement — clique « Reset » pour repartir des données mockées."
+        subtitle="Choisis un persona, suis le scénario. Tes actions sont persistées localement — clique « Reset » pour repartir des mocks."
         showFilters={false}
         right={
           <button
@@ -162,39 +171,37 @@ export default function TestPage() {
               resetStoreToMocks();
               if (typeof window !== "undefined") window.location.reload();
             }}
-            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--color-line)] bg-white px-3 py-1.5 text-[12.5px] font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-line-2)]"
+            className="btn btn-secondary"
           >
-            <RotateCcw size={13} strokeWidth={1.8} />
+            <RotateCcw size={13} strokeWidth={2} />
             Reset données mock
           </button>
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 px-8 py-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 px-8 py-6 md:grid-cols-2">
         {PERSONAS.map((p) => {
           const active = p.id === roleView && p.userId === currentUserId;
           const Icon = p.icon;
           return (
             <section
               key={p.id + p.userId}
-              className={`card overflow-hidden ${
+              className={`card-elevated ${
                 active ? "ring-2 ring-[var(--color-accent)]" : ""
               }`}
             >
-              <div className="flex items-start gap-3 border-b border-[var(--color-line-2)] bg-[var(--color-surface-2)] px-5 py-4">
-                <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-md bg-[var(--color-ink)] text-white">
-                  <Icon size={16} strokeWidth={1.8} />
+              <div className="card-header">
+                <span
+                  className={`inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${p.accent} text-white shadow-[0_2px_8px_-2px_rgba(11,18,32,0.25)]`}
+                >
+                  <Icon size={18} strokeWidth={2} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-[15px] font-semibold tracking-tight">
+                    <h2 className="text-[15.5px] font-bold tracking-tight">
                       {p.name}
                     </h2>
-                    {active && (
-                      <span className="rounded-sm bg-[var(--color-accent)] px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-white">
-                        Actif
-                      </span>
-                    )}
+                    {active && <span className="badge badge-info">Actif</span>}
                   </div>
                   <p className="mt-0.5 text-[12px] leading-snug text-[var(--color-ink-3)]">
                     {p.tagline}
@@ -204,20 +211,20 @@ export default function TestPage() {
                   type="button"
                   onClick={() => switchTo(p)}
                   disabled={active}
-                  className="rounded-md border border-[var(--color-line)] bg-white px-2.5 py-1 text-[11.5px] font-medium text-[var(--color-ink-2)] hover:bg-[var(--color-line-2)] disabled:opacity-50"
+                  className="btn btn-secondary btn-sm"
                 >
                   {active ? "Connecté" : "Devenir"}
                 </button>
               </div>
               <ul className="divide-y divide-[var(--color-line-2)]">
                 {p.scenarios.map((s, i) => (
-                  <li key={i} className="px-5 py-3">
+                  <li key={i} className="px-5 py-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <div className="text-[13px] font-medium">
+                        <div className="text-[13.5px] font-semibold">
                           {s.title}
                         </div>
-                        <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-[11.5px] leading-snug text-[var(--color-ink-3)]">
+                        <ol className="mt-1.5 list-decimal space-y-0.5 pl-4 text-[12px] leading-snug text-[var(--color-ink-3)]">
                           {s.steps.map((step, j) => (
                             <li key={j}>{step}</li>
                           ))}
@@ -228,10 +235,10 @@ export default function TestPage() {
                         onClick={() => {
                           if (!active) switchTo(p);
                         }}
-                        className="inline-flex shrink-0 items-center gap-1 rounded-md bg-[var(--color-ink)] px-2.5 py-1 text-[11.5px] font-medium text-white hover:bg-[var(--color-ink-2)]"
+                        className="btn btn-dark btn-sm shrink-0"
                       >
                         {s.cta ?? "Lancer"}
-                        <ArrowRight size={11} strokeWidth={2} />
+                        <ArrowRight size={11} strokeWidth={2.4} />
                       </Link>
                     </div>
                   </li>

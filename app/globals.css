@@ -1,48 +1,82 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Canvas — outil métier, très clair, contraste fort */
-  --color-paper: #fafafa;
+  /* Canvas — outil métier avec presence. Pas blanc plat. */
+  --color-paper: #f1f3f7;
   --color-surface: #ffffff;
-  --color-surface-2: #f4f4f5;
-  --color-ink: #09090b;
-  --color-ink-2: #27272a;
-  --color-ink-3: #52525b;
-  --color-muted: #71717a;
-  --color-line: #e4e4e7;
-  --color-line-2: #f4f4f5;
-  --shadow-card: 0 1px 2px rgba(9, 9, 11, 0.04), 0 1px 1px rgba(9, 9, 11, 0.03);
-  --shadow-card-hover: 0 2px 4px rgba(9, 9, 11, 0.06),
-    0 8px 24px -12px rgba(9, 9, 11, 0.14);
+  --color-surface-2: #f7f8fc;
+  --color-surface-3: #eceff5;
+  --color-ink: #0b1220;
+  --color-ink-2: #1f2937;
+  --color-ink-3: #475569;
+  --color-muted: #64748b;
+  --color-line: #d6dbe4;
+  --color-line-2: #e6eaf1;
+  --color-line-3: #c8cfdb;
 
-  /* Sidebar (anthracite profond, Linear-like) */
-  --color-rail: #09090b;
-  --color-rail-2: #18181b;
-  --color-rail-line: #27272a;
-  --color-rail-text: #a1a1aa;
-  --color-rail-text-hi: #fafafa;
-  --color-rail-active: #27272a;
+  /* Shadows — visibles, pas timides */
+  --shadow-card:
+    0 1px 0 rgba(11, 18, 32, 0.04),
+    0 1px 2px rgba(11, 18, 32, 0.05),
+    0 4px 12px -6px rgba(11, 18, 32, 0.10);
+  --shadow-card-hover:
+    0 1px 0 rgba(11, 18, 32, 0.04),
+    0 4px 8px rgba(11, 18, 32, 0.07),
+    0 12px 28px -10px rgba(11, 18, 32, 0.18);
+  --shadow-pop:
+    0 8px 24px -8px rgba(11, 18, 32, 0.22),
+    0 16px 48px -12px rgba(11, 18, 32, 0.18);
+  --shadow-btn:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 1px 2px rgba(11, 18, 32, 0.18),
+    0 2px 6px -2px rgba(11, 18, 32, 0.18);
+  --shadow-btn-primary:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 1px 2px rgba(37, 99, 235, 0.30),
+    0 4px 14px -4px rgba(37, 99, 235, 0.45);
 
-  /* Accent signature — bleu électrique */
-  --color-accent: #3b82f6;
-  --color-accent-2: #2563eb;
+  /* Sidebar — anthracite + accent visible */
+  --color-rail: #0b1220;
+  --color-rail-2: #131b2e;
+  --color-rail-line: #1f2a44;
+  --color-rail-text: #94a3b8;
+  --color-rail-text-hi: #f8fafc;
+  --color-rail-active: #1e293b;
+
+  /* Accent — bleu électrique + variantes pour gradient */
+  --color-accent: #2563eb;
+  --color-accent-2: #1d4ed8;
+  --color-accent-3: #1e40af;
   --color-accent-soft: #dbeafe;
+  --color-accent-soft-2: #eff6ff;
+  --color-accent-ink: #1e3a8a;
 
-  /* Status — saturés et nets */
-  --color-status-todo: #a1a1aa;
+  /* Status — saturés, lisibles en fond ET en texte */
+  --color-status-todo: #94a3b8;
   --color-status-partial: #f59e0b;
+  --color-status-partial-bg: #fef3c7;
+  --color-status-partial-ink: #92400e;
   --color-status-done: #10b981;
+  --color-status-done-bg: #d1fae5;
+  --color-status-done-ink: #065f46;
   --color-status-alert: #ef4444;
+  --color-status-alert-bg: #fee2e2;
+  --color-status-alert-ink: #991b1b;
+  --color-status-info: #3b82f6;
+  --color-status-info-bg: #dbeafe;
+  --color-status-info-ink: #1e40af;
 
-  /* Category tints — neutres tirés vers couleur */
-  --color-tint-pink: #fce7e6;
-  --color-tint-pink-ink: #9f1239;
+  /* Category tints — riches, pas pastel pâle */
+  --color-tint-pink: #fce7f3;
+  --color-tint-pink-ink: #9d174d;
   --color-tint-sand: #fef3c7;
   --color-tint-sand-ink: #92400e;
   --color-tint-sage: #d1fae5;
   --color-tint-sage-ink: #065f46;
   --color-tint-mist: #dbeafe;
   --color-tint-mist-ink: #1e40af;
+  --color-tint-violet: #ede9fe;
+  --color-tint-violet-ink: #5b21b6;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -55,85 +89,336 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   font-feature-settings: "ss01", "cv11";
   font-synthesis-weight: none;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.003em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Reduce default font size for outil-métier density */
 body {
-  font-size: 13px;
+  font-size: 13.5px;
   line-height: 1.5;
 }
 
-h1,
-h2,
-h3,
-h4 {
+h1, h2, h3, h4 {
   letter-spacing: -0.018em;
+  color: var(--color-ink);
 }
 
 .hairline {
   border-color: var(--color-line);
 }
 
-/* Card surface used everywhere */
+/* ============================================================ */
+/*  Surfaces                                                     */
+/* ============================================================ */
+
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.card-elevated {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card-hover);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(
+    to bottom,
+    var(--color-surface-2),
+    var(--color-surface)
+  );
+  border-bottom: 1px solid var(--color-line-2);
+}
+
+.card-header-tinted {
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-soft-2),
+    var(--color-accent-soft) 70%,
+    var(--color-accent-soft-2)
+  );
+  border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.card-body {
+  padding: 18px;
+}
+
+.card-section {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-line-2);
+}
+.card-section:last-child {
+  border-bottom: none;
+}
+
+/* ============================================================ */
+/*  Buttons — affirmés, avec shadow et profondeur                */
+/* ============================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: transform 120ms ease, box-shadow 120ms ease,
+    background 120ms ease, border-color 120ms ease;
+  white-space: nowrap;
+  user-select: none;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(0.5px);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(
+    to bottom,
+    var(--color-accent),
+    var(--color-accent-2)
+  );
+  color: #fff;
+  border: 1px solid var(--color-accent-3);
+  box-shadow: var(--shadow-btn-primary);
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(
+    to bottom,
+    var(--color-accent-2),
+    var(--color-accent-3)
+  );
+}
+
+.btn-dark {
+  background: linear-gradient(
+    to bottom,
+    #1f2937,
+    var(--color-ink)
+  );
+  color: #fff;
+  border: 1px solid #000;
+  box-shadow: var(--shadow-btn);
+}
+.btn-dark:hover:not(:disabled) {
+  background: linear-gradient(
+    to bottom,
+    var(--color-ink-2),
+    var(--color-ink)
+  );
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-ink-2);
+  border: 1px solid var(--color-line);
+  box-shadow: 0 1px 2px rgba(11, 18, 32, 0.05);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-surface-2);
+  border-color: var(--color-line-3);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-ink-2);
+  border: 1px solid transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-surface-3);
+  border-color: var(--color-line);
+}
+
+.btn-danger {
+  background: linear-gradient(to bottom, #ef4444, #b91c1c);
+  color: #fff;
+  border: 1px solid #991b1b;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn-sm {
+  height: 26px;
+  padding: 0 9px;
+  font-size: 11.5px;
+  border-radius: 6px;
+}
+.btn-lg {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13.5px;
   border-radius: 10px;
+}
+
+/* ============================================================ */
+/*  Badges & chips                                                */
+/* ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.badge-soft {
+  background: var(--color-surface-3);
+  color: var(--color-ink-2);
+  border-color: var(--color-line-2);
+}
+.badge-info {
+  background: var(--color-status-info-bg);
+  color: var(--color-status-info-ink);
+  border-color: color-mix(in srgb, var(--color-status-info) 30%, transparent);
+}
+.badge-success {
+  background: var(--color-status-done-bg);
+  color: var(--color-status-done-ink);
+  border-color: color-mix(in srgb, var(--color-status-done) 30%, transparent);
+}
+.badge-warning {
+  background: var(--color-status-partial-bg);
+  color: var(--color-status-partial-ink);
+  border-color: color-mix(in srgb, var(--color-status-partial) 35%, transparent);
+}
+.badge-danger {
+  background: var(--color-status-alert-bg);
+  color: var(--color-status-alert-ink);
+  border-color: color-mix(in srgb, var(--color-status-alert) 30%, transparent);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-ink-2);
+}
+.chip-active {
+  background: var(--color-ink);
+  color: #fff;
+  border-color: var(--color-ink);
+}
+
+/* ============================================================ */
+/*  KPI block                                                     */
+/* ============================================================ */
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
   box-shadow: var(--shadow-card);
 }
-
-/* Table density */
-table.dense th,
-table.dense td {
-  padding-block: 6px;
-  padding-inline: 10px;
+.kpi-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--color-ink-3);
+}
+.kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
 }
 
+/* ============================================================ */
+/*  Tables                                                        */
+/* ============================================================ */
+table.dense th,
+table.dense td {
+  padding: 8px 12px;
+}
+table.dense thead th {
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-line);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-3);
+  font-weight: 600;
+}
+table.dense tbody tr {
+  border-top: 1px solid var(--color-line-2);
+}
+table.dense tbody tr:hover {
+  background: var(--color-surface-2);
+}
+
+/* ============================================================ */
+/*  Animations                                                    */
+/* ============================================================ */
 @keyframes drawer-in {
-  from {
-    transform: translateX(16px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(16px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 .animate-drawer-in {
   animation: drawer-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes overlay-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .animate-overlay-in {
   animation: overlay-in 160ms ease-out;
 }
 
+/* ============================================================ */
+/*  Scrollbar                                                     */
+/* ============================================================ */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(9, 9, 11, 0.12);
+  background: rgba(11, 18, 32, 0.16);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(9, 9, 11, 0.22);
+  background: rgba(11, 18, 32, 0.26);
   background-clip: padding-box;
 }
 
-/* Focus ring uniforme */
+/* ============================================================ */
+/*  Focus                                                         */
+/* ============================================================ */
 *:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
